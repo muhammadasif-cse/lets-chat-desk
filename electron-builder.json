@@ -2,7 +2,7 @@
   "appId": "com.n-ziermann.lets-chat",
   "files": ["dist-electron", "dist-react"],
   "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
-  "icon": "./desktopIcon.png",
+  "icon": "/lets-chat.png",
   "mac": {
     "target": "dmg"
   },
