@@ -14,7 +14,7 @@ app.on('ready', () => {
     frame: false,
   });
   if (isDev()) {
-    mainWindow.loadURL('http://localhost:5123');
+    mainWindow.loadURL('http://localhost:5173');
   } else {
     mainWindow.loadFile(getUIPath());
   }
