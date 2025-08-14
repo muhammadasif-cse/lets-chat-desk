@@ -2,6 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* WhatsApp light theme mapping */
+    --background: 201 15% 93%; /* #E9EDEF */
+    --foreground: 202 32% 10%; /* #111B21 */
+
+    --card: 201 15% 93%; /* light */
+    --card-foreground: 202 32% 10%; /* dark */
+
+    --popover: 201 15% 93%;
+    --popover-foreground: 202 32% 10%;
+
+    --primary: 167 100% 33%; /* green */
+    --primary-foreground: 0 0% 100%; /* white */
+
+    --secondary: 202 13% 72%; /* gray2 */
+    --secondary-foreground: 202 32% 10%; /* dark */
+
+    --muted: 203 12% 58%; /* gray */
+    --muted-foreground: 204 21% 17%; /* dark2 */
+
+    --accent: 198 79% 62%; /* blue */
+    --accent-foreground: 202 32% 10%; /* dark */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 202 13% 72%; /* gray2 */
+    --input: 202 13% 72%;
+    --ring: 167 100% 33%; /* green */
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* WhatsApp dark theme mapping */
+    --background: 202 32% 10%; /* #111B21 */
+    --foreground: 201 15% 93%; /* #E9EDEF */
+
+    --card: 202 23% 16%; /* dark3 */
+    --card-foreground: 201 15% 93%;
+
+    --popover: 202 23% 16%;
+    --popover-foreground: 201 15% 93%;
+
+    --primary: 167 100% 33%; /* green */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 206 9% 18%; /* dark4 */
+    --secondary-foreground: 201 15% 93%;
+
+    --muted: 206 9% 18%; /* dark4 */
+    --muted-foreground: 203 12% 58%; /* gray */
+
+    --accent: 198 79% 62%; /* blue */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 201 15% 93%;
+
+    --border: 206 9% 18%; /* dark4 */
+    --input: 206 9% 18%;
+    --ring: 167 100% 33%; /* green */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
