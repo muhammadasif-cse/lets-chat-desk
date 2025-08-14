@@ -18,10 +18,12 @@
     "test:unit": "vitest src"
   },
   "dependencies": {
+    "@types/date-fns": "^2.5.3",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.539.0",
     "os-utils": "^0.0.14",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "recharts": "^2.12.7"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.2",
