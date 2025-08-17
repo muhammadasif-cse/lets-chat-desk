@@ -48,28 +48,15 @@ const Login = () => {
 
       if (response?.code === 200 || response?.success) {
         toast.success(response?.message || "Login successful!");
-        console.log(
-          "🚀 ~ onSubmit ~ result:",
-          response?.data || response?.result
-        );
 
-        // Store user data with rememberMe preference
         const userData = response?.data || response?.result;
         if (userData && userData.token) {
           userCookies.setUserData(userData, form_data.rememberMe);
-
-          // Optionally redirect or trigger app state update here
-          console.log(
-            "🚀 ~ User data stored with rememberMe:",
-            form_data.rememberMe
-          );
         }
       } else {
         toast.error(response?.message || "Login failed!");
       }
     } catch (error: any) {
-      console.log("🚀 ~ onSubmit ~ error:", error);
-
       if (error?.status === "FETCH_ERROR") {
         console.error("🚀 ~ Network error details:", error);
         toast.error(
