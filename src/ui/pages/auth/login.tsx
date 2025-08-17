@@ -8,11 +8,12 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { toast } from "sonner";
-import { userCookies } from "../../utils/cookies";
+import useAuth from "../../hooks/useAuth";
 import { useLoginMutation } from "../../../redux/auth/mutation";
 
 const Login = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { setAuthInfo } = useAuth();
 
   // redux component
   const [login, { isLoading }] = useLoginMutation();
@@ -44,14 +45,12 @@ const Login = () => {
   const onSubmit = async (form_data: any) => {
     try {
       const response: any = await login(form_data).unwrap();
-      console.log("🚀 ~ onSubmit ~ response:", response);
-
       if (response?.code === 200 || response?.success) {
         toast.success(response?.message || "Login successful!");
 
         const userData = response?.data || response?.result;
         if (userData && userData.token) {
-          userCookies.setUserData(userData, form_data.rememberMe);
+          setAuthInfo(userData, form_data.rememberMe);
         }
       } else {
         toast.error(response?.message || "Login failed!");

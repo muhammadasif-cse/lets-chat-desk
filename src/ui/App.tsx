@@ -6,12 +6,11 @@ import { Toaster } from "sonner";
 import Index from "./pages/chat";
 
 function AppInner() {
-  const { getAuthInfo } = useAuth();
-  const authInfo = getAuthInfo();
+  const { isAuthenticated } = useAuth();
 
   return (
     <AuthGuard requireAuth={false}>
-      {authInfo.access_token ? <Index /> : <Login />}
+      {isAuthenticated ? <Index /> : <Login />}
     </AuthGuard>
   );
 }

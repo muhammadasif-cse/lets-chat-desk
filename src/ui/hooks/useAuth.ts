@@ -1,98 +1,97 @@
 /** @format */
-import { TAuthState } from "../../redux/auth/state";
-import { useDispatch } from "react-redux";
-import { getAuth, removeAuth, setAuth } from "../lib/utils/cookies";
-import { setCredentials } from "../../redux/auth/action";
+import { useDispatch, useSelector } from "react-redux";
+import { userCookies } from "../utils/cookies";
+import {
+  setCredentials,
+  logout as logoutAction,
+  syncAuthFromCookies,
+} from "../../redux/auth/action";
+import { RootState } from "../../redux/store";
+import { useEffect } from "react";
 
 export default function useAuth() {
   const dispatch = useDispatch();
+  const authState = useSelector((state: RootState) => state.auth);
 
-  const setAuthInfo = (payload: TAuthState) => {
-    if (payload?.token) {
-      setAuth({
-        data: payload?.token,
-        name: "token",
-        expire: payload?.session_time,
-      });
+  //! sync with cookies on mount
+  useEffect(() => {
+    const isLoggedIn = userCookies.isLoggedIn();
+    const userData = userCookies.getUserData();
+    if (authState.isAuthenticated !== isLoggedIn) {
+      dispatch(syncAuthFromCookies({ isLoggedIn, userData }));
     }
-    if (payload?.auth) {
-      setAuth({
-        data: payload?.auth,
-        name: "user",
-        expire: payload?.session_time,
-      });
-    }
-    if (payload?.permissions && payload?.permissions?.length > 0) {
-      setAuth({
-        data: payload?.permissions,
-        name: "permissions",
-        expire: payload?.session_time,
-      });
-    }
+  }, [authState.isAuthenticated, dispatch]);
+
+  const setAuthInfo = (userData: any, rememberMe: boolean = false) => {
+    userCookies.setUserData(userData, rememberMe);
+
+    dispatch(
+      setCredentials({
+        token: userData.token,
+        user: {
+          userId: userData.userId,
+          fullName: userData.fullName,
+          userName: userData.userName,
+          photo: userData.photo,
+          roleOrder: userData.roleOrder,
+          branchId: userData.branchId,
+          departmentId: userData.departmentId,
+          services: userData.services || [],
+        },
+      })
+    );
   };
 
   const getAuthInfo = () => {
-    const auth = getAuth();
-    const auth_token = auth?.token;
-    const auth_user = auth?.user;
-    const auth_permission = auth?.permissions;
-
     return {
-      access_token: auth_token,
-      user: auth_user,
-      permission: auth_permission,
+      access_token: authState.token,
+      user: authState.user,
+      permission: authState.user?.services || [],
     };
   };
 
-  const setAuthState = () => {
-    dispatch(setCredentials(getAuthInfo()));
-  };
-
-  const removeAuthInfo = () => {
-    removeAuth();
-  };
-
-  const isLoggedIn = () => {
-    const authInfo = getAuthInfo();
-    return !!(authInfo.access_token && authInfo.user);
-  };
-
-  const isAuthenticated = isLoggedIn();
-
-  const isTokenValid = () => {
-    const authInfo = getAuthInfo();
-    return !!authInfo.access_token;
+  const refresh = () => {
+    const isLoggedIn = userCookies.isLoggedIn();
+    const userData = userCookies.getUserData();
+    dispatch(syncAuthFromCookies({ isLoggedIn, userData }));
   };
 
   const logout = () => {
-    removeAuthInfo();
+    userCookies.clearUserData();
+    dispatch(logoutAction());
   };
 
-  const refresh = () => {
-    setAuthState();
+  const isLoggedIn = () => {
+    return authState.isAuthenticated;
+  };
+
+  const isTokenValid = () => {
+    return !!(authState.token && authState.user);
   };
 
   const hasRole = (requiredRole: number) => {
-    const authInfo = getAuthInfo();
-    return authInfo.user && (authInfo.user as any).roleOrder >= requiredRole;
+    return authState.user && authState.user.roleOrder >= requiredRole;
   };
 
   const hasService = (serviceName: string) => {
-    const authInfo = getAuthInfo();
-    const permissions = authInfo.permission as any[];
-    return permissions?.some(
-      (permission: any) =>
-        permission.name === serviceName || permission.code === serviceName
+    const services = authState.user?.services || [];
+    return services.some(
+      (service: any) =>
+        service.name === serviceName || service.code === serviceName
     );
   };
 
   return {
+    isAuthenticated: authState.isAuthenticated,
+    token: authState.token,
+    user: authState.user,
+
     setAuthInfo,
-    setAuthState,
     getAuthInfo,
-    removeAuthInfo,
+    removeAuthInfo: logout,
+    setAuthState: refresh,
+
     isLoggedIn,
-    isAuthenticated,
     isTokenValid,
     logout,
     refresh,

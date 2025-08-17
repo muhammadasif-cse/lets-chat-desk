@@ -1,3 +1,5 @@
+import { ILoginRes } from "./login-res.inteface";
+
 export interface CookieOptions {
   expires?: Date | number;
   maxAge?: number;
@@ -97,25 +99,8 @@ export const cookies = {
   },
 };
 
-export interface UserData {
-  token: string;
-  fullName: string;
-  userName: string;
-  userId: number;
-  roleOrder: number;
-  photo: string;
-  branchId: number;
-  departmentId: number;
-  services: Array<{
-    id: number;
-    code: string;
-    url: string;
-    name: string;
-  }>;
-}
-
 export const userCookies = {
-  setUserData: (userData: UserData, rememberMe: boolean = false): void => {
+  setUserData: (userData: ILoginRes, rememberMe: boolean = false): void => {
     const expires = rememberMe ? 30 : 8 / 24;
     const options: CookieOptions = {
       expires,
@@ -142,7 +127,7 @@ export const userCookies = {
     cookies.set("login_time", new Date().toISOString(), options);
   },
 
-  getUserData: (): UserData | null => {
+  getUserData: (): ILoginRes | null => {
     const token = cookies.get("auth_token");
     const userData = cookies.get("user_data");
 

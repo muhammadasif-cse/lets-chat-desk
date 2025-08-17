@@ -4,19 +4,16 @@
 
 import { TUser } from "../../ui/types/user.type";
 
-
 export type TAuthState = {
+  isAuthenticated: boolean;
   token: string;
-  session_time: number;
-  auth: TUser | null;
-  permissions: [];
+  user: TUser | null;
 };
 
 const initialState: TAuthState = {
+  isAuthenticated: false,
   token: "",
-  session_time: 0,
-  auth: null,
-  permissions: [],
+  user: null,
 };
 
 export default initialState;
