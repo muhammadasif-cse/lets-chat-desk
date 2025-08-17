@@ -1,19 +1,27 @@
-import { Button } from "./components/ui/button";
+import ReduxProvider from "../redux/redux-provider";
+import AuthGuard from "./components/auth-guard";
+import useAuth from "./hooks/useAuth";
+import Login from "./pages/auth/login";
+import { Toaster } from "sonner";
+import Index from "./pages/chat";
+
+function AppInner() {
+  const { getAuthInfo } = useAuth();
+  const authInfo = getAuthInfo();
+
+  return (
+    <AuthGuard requireAuth={false}>
+      {authInfo.access_token ? <Index /> : <Login />}
+    </AuthGuard>
+  );
+}
 
 const App = () => {
   return (
-    <div className="min-h-screen bg-dark text-light p-6">
-      <div className="max-w-md mx-auto space-y-4">
-        <h1 className="text-2xl font-semibold">shadcn/ui + Tailwind v3</h1>
-        <div className="flex gap-2">
-          <Button>Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="outline">Outline</Button>
-          <Button variant="ghost">Ghost</Button>
-          <Button variant="link">Link</Button>
-        </div>
-      </div>
-    </div>
+    <ReduxProvider>
+      <AppInner />
+      <Toaster />
+    </ReduxProvider>
   );
 };
 

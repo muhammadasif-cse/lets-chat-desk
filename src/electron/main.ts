@@ -5,6 +5,9 @@ app.on("ready", () => {
   const mainWindow = new BrowserWindow({
     webPreferences: {
       preload: getPreloadPath(),
+      webSecurity: false,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
     frame: true,
     autoHideMenuBar: true,

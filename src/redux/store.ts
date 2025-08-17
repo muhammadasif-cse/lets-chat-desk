@@ -2,12 +2,12 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
 import APIHeader from "./APIHeader";
-import throughoutAction from "./shared/action";
+import { authSlice } from "./auth/action";
 
 const store = configureStore({
   reducer: {
     [APIHeader.reducerPath]: APIHeader.reducer,
-    menu: throughoutAction.reducer,
+    auth: authSlice.reducer,
   },
   devTools: import.meta.env.NODE_ENV != "production",
   middleware: (getDefaultMiddleware) =>
