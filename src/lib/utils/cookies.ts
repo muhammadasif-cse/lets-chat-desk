@@ -1,6 +1,6 @@
 /** @format */
 
-import { TCookies, TSetCookies } from "../../types/cookies.type";
+import { TCookies, TSetCookies } from "../../ui/types/cookies.type";
 import Cookies from "js-cookie";
 
 export const setAuth = ({ data, name, expire }: TSetCookies): void => {

@@ -3,11 +3,13 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 
 import APIHeader from "./APIHeader";
 import { authSlice } from "./auth/action";
+import { chatSlice } from "./store/actions";
 
 const store = configureStore({
   reducer: {
     [APIHeader.reducerPath]: APIHeader.reducer,
     auth: authSlice.reducer,
+    chat: chatSlice.reducer,
   },
   devTools: import.meta.env.NODE_ENV != "production",
   middleware: (getDefaultMiddleware) =>

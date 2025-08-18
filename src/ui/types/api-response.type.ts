@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** @format */
 
-export type TResponse = {
+export type TResponse<T> = {
   code?: number;
   status: boolean;
   message: string;
-  data: any;
+  result: T | any;
   errors: any;
 };
 export type TPagination = {
