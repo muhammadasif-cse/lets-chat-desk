@@ -16,22 +16,20 @@ const RecentList = () => {
     }
   }, [handleRecentChatUsers, isLoading]);
 
-  return isLoading ? (
-    <UsersSkeleton skeleton={10} />
-  ) : (
-    filteredChats.map((data, index) => (
-      <Users
-        key={index}
-        data={data}
-        // onUserSelect={onUserSelect}
-        // editingGroupId={editingGroupId}
-        // setEditingGroupId={setEditingGroupId}
-        // key={index}
-        // chat={chat}
-        // unreadCount={chat.unreadCount}
-        // markMultipleMessageAsSeen={markMultipleMessageAsSeen}
-      />
-    ))
+  return (
+    <div
+      className="h-screen overflow-auto custom-scrollbar"
+      style={{
+        scrollbarColor: "#2a3942 #111B21",
+        scrollbarWidth: "thin",
+      }}
+    >
+      {isLoading ? (
+        <UsersSkeleton skeleton={10} />
+      ) : (
+        filteredChats.map((data, index) => <Users key={index} data={data} />)
+      )}
+    </div>
   );
 };
 

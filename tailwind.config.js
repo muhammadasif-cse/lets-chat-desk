@@ -47,6 +47,7 @@ export default {
   			blue: '#53BDEB',
   			blue2: '#007BFC',
   			green: '#00A884',
+			green2: '#00D95F',
   			dark3: '#202C33',
   			gray2: '#AEBAC1',
   			teal: '#0A332C',

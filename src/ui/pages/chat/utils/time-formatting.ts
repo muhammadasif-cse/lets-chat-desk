@@ -1,42 +1,29 @@
-import moment from "moment-timezone";
+export const formatTime = (dateString: string) => {
+  if (!dateString) return "";
 
-interface FormatMessageTimeProps {
-  dateString: string;
-  showTime?: boolean;
-}
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-export const formatMessageTime = ({
-  dateString,
-  showTime = true,
-}: FormatMessageTimeProps): string => {
-  if (!dateString || dateString.trim() === "") {
-    return "";
-  }
-
-  const date = moment.tz(dateString, "Asia/Dhaka");
-  if (!date.isValid()) {
-    return "";
-  }
-
-  const now = moment.tz("Asia/Dhaka");
-  const diffInMinutes = now.diff(date, "minutes");
-  const diffInDays = now.diff(date, "days");
-
-  if (diffInMinutes < 1) {
-    return "Just now";
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} min ago`;
-  } else if (date.isSame(now, "day")) {
-    return showTime ? `Today at ${date.format("h:mm A")}` : "Today";
-  } else if (date.isSame(now.clone().subtract(1, "day"), "day")) {
-    return showTime ? `Yesterday at ${date.format("h:mm A")}` : "Yesterday";
+  if (diffInDays === 0) {
+    // Today - show time
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } else if (diffInDays === 1) {
+    return "Yesterday";
   } else if (diffInDays < 7) {
-    return showTime ? `${date.format("ddd")} at ${date.format("h:mm A")}` : date.format("ddd");
-  } else if (date.isSame(now, "year")) {
-    return showTime ? `${date.format("MMM D")} at ${date.format("h:mm A")}` : date.format("MMM D");
+    // This week - show day name
+    return date.toLocaleDateString("en-US", { weekday: "long" });
   } else {
-    return showTime
-      ? `${date.format("MMM D, YYYY")} at ${date.format("h:mm A")}`
-      : date.format("MMM D, YYYY");
+    // Older - show date
+    return date.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "2-digit",
+    });
   }
 };

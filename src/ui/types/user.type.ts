@@ -1,5 +1,14 @@
 /** @format */
 
+import { IRecentChatUsers } from "../../interfaces/user";
+
+export interface IUsersProps {
+  data: IRecentChatUsers;
+  isLast?: boolean;
+  isSelected?: boolean;
+  onUserSelect?: (data: IRecentChatUsers) => void;
+}
+
 export type TUser = {
   userId: number;
   fullName: string;

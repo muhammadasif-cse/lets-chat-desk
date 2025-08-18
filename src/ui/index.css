@@ -103,3 +103,14 @@ button {
   width: 100vw !important;
   height: 100vh;
 }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  background: #0b141a;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #232d36;
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2a3942;
+}

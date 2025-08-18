@@ -1,136 +1,237 @@
-import { CheckCheck, Check, Mic } from "lucide-react";
-import { IRecentChatUsers } from "../../../../interfaces/user";
-import { formatMessageTime } from "../utils/time-formatting";
-import { useMemo } from "react";
-import MessagePreview from "./message-preview";
-import { useChatItemState } from "../../../hooks/useChatItemState";
+import { Check } from "lucide-react";
+import { useMemo, useState } from "react";
+import { formatTime } from "../utils/time-formatting";
+import { Check2Icon } from "../../../assets/icons/check.icon";
+import { IUsersProps } from "../../../types/user.type";
+import { UserIcon, UsersIcon } from "../../../assets/icons/users.icon";
 
-interface UsersProps {
-  data: IRecentChatUsers;
-  isLast?: boolean;
-  onUserSelect?: (data: IRecentChatUsers) => void;
-}
-
-const Users = ({ data, isLast = false, onUserSelect }: UsersProps) => {
-  const {
-    searchQuery,
-    setSearchQuery,
-    filteredUsers,
-    getMessagePreviewData,
-    handleChatActions,
-    setupDraftLogic,
-  } = useChatItemState();
-
-  //* get message preview data and transform it
-  const rawMessageData = getMessagePreviewData(data);
-  const messagePreviewData = useMemo(() => {
-    if (rawMessageData.type === "typing") {
-      return { text: "typing...", className: "text-green-500" };
-    }
-    if (rawMessageData.type === "group-typing") {
-      return {
-        text: `${rawMessageData.username} is typing...`,
-        className: "text-green-500",
-      };
-    }
-    if (rawMessageData.type === "draft") {
-      return {
-        text: rawMessageData.content,
-        className: "text-emerald-500",
-        emoji: "📝",
-      };
-    }
-    //* for regular messages, we need to parse them
-    const parsedMessage = rawMessageData.content;
-    return { text: parsedMessage, className: "text-gray-400" };
-  }, [rawMessageData]);
+const Users = ({
+  data,
+  isLast = false,
+  isSelected = false,
+  onUserSelect,
+}: IUsersProps) => {
+  const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
     if (onUserSelect) {
       onUserSelect(data);
     }
   };
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   const isGroup = data.type === "group";
+  const hasUnreadMessages = (data.unreadCount ?? 0) > 0;
+
+  // message preview
+  const messagePreview = useMemo(() => {
+    if (data.isTyping) {
+      return {
+        text: "typing...",
+        className: "text-green2 italic",
+        isTyping: true,
+      };
+    }
+
+    let message = data.message || data.lastMessage || "No messages yet";
+
+    // handle different message types
+    if (message === "Attachment(s)" || message.includes("📎")) {
+      return {
+        text: "🗃️ Document(s)",
+        className: hasUnreadMessages ? "text-light" : "text-gray",
+      };
+    }
+
+    if (message.includes("📷") || message === "Photo") {
+      return {
+        text: "📷 Photo(s)",
+        className: hasUnreadMessages ? "text-light" : "text-gray",
+      };
+    }
+
+    if (message.includes("🎵") || message.includes("audio")) {
+      return {
+        text: "🎵 Audio(s)",
+        className: hasUnreadMessages ? "text-light" : "text-gray",
+      };
+    }
+    if (message.includes("@[")) {
+      const mentionMatch = message.match(/@\[(.+?)\]\((\d+)\)/);
+      if (mentionMatch) {
+        const mentionName = mentionMatch[1];
+        return {
+          text: `@${mentionName}`,
+          className: hasUnreadMessages ? "text-light" : "text-gray",
+        };
+      }
+      return {
+        text: "@mention",
+        className: hasUnreadMessages ? "text-light" : "text-gray",
+      };
+    }
+
+    if (message.startsWith("http")) {
+      try {
+        const url = new URL(message);
+        return {
+          text: `🔗 ${url.hostname}`,
+          className: hasUnreadMessages ? "text-light" : "text-gray",
+        };
+      } catch {
+        return {
+          text: "🔗 Link",
+          className: hasUnreadMessages ? "text-light" : "text-gray",
+        };
+      }
+    }
+
+    // handle group messages with sender name
+    if (isGroup && message.includes(":")) {
+      const parts = message.split(":");
+      const sender = parts[0];
+      const content = parts.slice(1).join(":").trim();
+
+      if (content.length > 30) {
+        return {
+          text: `${sender}: ${content.substring(0, 30)}...`,
+          className: hasUnreadMessages ? "text-light" : "text-gray",
+        };
+      }
+
+      return {
+        text: message,
+        className: hasUnreadMessages ? "text-light" : "text-gray",
+      };
+    }
+
+    // regular message truncation
+    if (message.length > 35) {
+      message = message.substring(0, 35) + "...";
+    }
+
+    return {
+      text: message,
+      className: hasUnreadMessages ? "text-light" : "text-gray",
+    };
+  }, [
+    data.message,
+    data.lastMessage,
+    data.isTyping,
+    hasUnreadMessages,
+    isGroup,
+  ]);
+
+  // message status icons
+  const renderMessageStatus = () => {
+    if (data.isSeen) {
+      return <Check2Icon className="w-4 h-4 text-blue" />;
+    } else if (data.lastMessage) {
+      return <Check2Icon className="w-4 h-4 text-gray" />;
+    }
+    return null;
+  };
 
   return (
-    <div
-      className="flex w-full items-center px-4 py-3 hover:bg-gray-800/30 cursor-pointer transition-colors duration-200"
-      onClick={handleClick}
-    >
-      <div className="relative mr-3 flex-shrink-0">
-        <img
-          width={40}
-          height={40}
-          src={
-            data.photo
-              ? isGroup
-                ? `${import.meta.env.VITE_API_ASSETS_URL}/groupimages/${
-                    data.photo
-                  }`
-                : `${import.meta.env.VITE_API_ASSETS_URL}/photos/${data.photo}`
-              : isGroup
-              ? "../../../assets/group-icon.png"
-              : "../../../assets/user-icon.png"
-          }
-          alt={data.name ?? "profile_picture"}
-          className="size-full w-10 h-10 border border-gray-700 shrink-0 rounded-full object-cover"
-        />
-        {data.isOnline && (
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-gray-900"></div>
-        )}
-      </div>
-
+    <div className="bg-foreground">
       <div
-        className={`flex h-full w-full justify-between ${
-          !isLast ? "border-b border-gray-700/50 pb-3" : ""
+        className={`flex items-center px-4 py-3 cursor-pointer transition-all duration-200 ${
+          isSelected ? "bg-dark3" : "hover:bg-dark3 active:bg-dark2"
         }`}
+        onClick={handleClick}
       >
-        <div className="flex flex-col justify-center space-y-1 flex-1 min-w-0">
-          <div className="flex items-center space-x-2">
-            <h3 className="text-white font-medium text-base truncate">
-              {data.name || data.groupName}
-            </h3>
-            {data.isAdmin && data.type === "group" && (
-              <div className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                <Check className="w-2.5 h-2.5 text-white" />
-              </div>
+        {/* avatar section */}
+        <div className="relative mr-3 flex-shrink-0">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-dark3 border border-dark flex items-center justify-center">
+            {!imageError && data.photo ? (
+              <img
+                src={
+                  isGroup
+                    ? `${import.meta.env.VITE_API_ASSETS_URL}/groupimages/${
+                        data.photo
+                      }`
+                    : `${import.meta.env.VITE_API_ASSETS_URL}/photos/${
+                        data.photo
+                      }`
+                }
+                alt={data.name ?? "profile"}
+                className="w-full h-full object-cover"
+                onError={handleImageError}
+              />
+            ) : isGroup ? (
+              <UsersIcon className="w-full h-full object-cover" />
+            ) : (
+              <UserIcon className="w-full h-full object-cover" />
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
-            <MessagePreview messageData={messagePreviewData} chat={data} />
-          </div>
+          {/* online indicator for users */}
+          {!isGroup && data.isOnline && (
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green2 rounded-full border-2 border-dark"></div>
+          )}
         </div>
 
-        {/* time and unread message count */}
-        <div className="flex flex-col items-end justify-center space-y-1 ml-2 flex-shrink-0">
-          <span className="text-gray-500 text-xs">
-            {formatMessageTime({
-              showTime: false,
-              dateString:
-                typeof data?.lastMessageDate === "string"
-                  ? data?.lastMessageDate
-                  : "",
-            })}
-          </span>
-          {(data.unreadCount ?? 0) > 0 && (
-            <div className="bg-green-500 text-white text-xs rounded-full h-5 min-w-[20px] flex items-center justify-center font-medium px-1.5">
-              {(data.unreadCount ?? 0) > 99 ? "99+" : data.unreadCount ?? 0}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <h3
+                className={`font-normal text-base truncate ${
+                  hasUnreadMessages ? "text-light" : "text-light"
+                }`}
+              >
+                {data.name || data.groupName}
+              </h3>
+
+              {/* admin badge for groups */}
+              {isGroup && data.isAdmin && (
+                <div className="flex-shrink-0 w-4 h-4 bg-green2 rounded-full flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-light" />
+                </div>
+              )}
             </div>
-          )}
-          {data.isTyping && (
-            <div className="flex space-x-1">
-              <div className="w-1 h-1 bg-green-500 rounded-full animate-bounce"></div>
-              <div
-                className="w-1 h-1 bg-green-500 rounded-full animate-bounce"
-                style={{ animationDelay: "0.1s" }}
-              ></div>
-              <div
-                className="w-1 h-1 bg-green-500 rounded-full animate-bounce"
-                style={{ animationDelay: "0.2s" }}
-              ></div>
+
+            <span className="text-gray text-xs font-normal ml-2 flex-shrink-0">
+              {formatTime(data.lastMessageDate || "")}
+            </span>
+          </div>
+
+          {/* bottom row: Message and Status */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              {/* message status for sent messages */}
+              {!isGroup && renderMessageStatus()}
+
+              {/* typing indicator */}
+              {messagePreview.isTyping && (
+                <div className="flex space-x-0.5 mr-1">
+                  <div className="w-1 h-1 bg-green2 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-1 h-1 bg-green2 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-1 h-1 bg-green2 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                </div>
+              )}
+
+              {/* message preview */}
+              <p className={`text-sm truncate ${messagePreview.className}`}>
+                {messagePreview.text}
+              </p>
             </div>
-          )}
+
+            {/* unread count */}
+            {hasUnreadMessages && (
+              <div className="bg-green2 text-dark text-xs rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center font-semibold ml-2">
+                {(data.unreadCount ?? 0) > 99 ? "99+" : data.unreadCount}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
