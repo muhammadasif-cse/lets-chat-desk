@@ -25,7 +25,7 @@ const RecentList = () => {
       }}
     >
       {isLoading ? (
-        <UsersSkeleton skeleton={10} />
+        <UsersSkeleton skeleton={14} />
       ) : (
         filteredChats.map((data, index) => <Users key={index} data={data} />)
       )}

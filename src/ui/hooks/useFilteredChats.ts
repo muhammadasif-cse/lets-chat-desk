@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useAppSelector } from "../../redux/selector";
 import { IRecentChatUsers } from "../../interfaces/user";
+import { useAppSelector } from "../../redux/selector";
 
 export const useFilteredChats = (): IRecentChatUsers[] => {
   const { recentChatUsers, searchQuery } = useAppSelector(

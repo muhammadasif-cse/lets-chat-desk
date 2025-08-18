@@ -3,6 +3,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "../../components/ui/resizable";
+import Chats from "./container/chats";
 import RecentList from "./container/recent-list";
 
 const Index = () => {
@@ -15,13 +16,11 @@ const Index = () => {
           maxSize={35}
           className="h-full bg-foreground"
         >
-          <div className="flex h-full flex-col overflow-hidden border-r border-gray-700">
-            <RecentList />
-          </div>
+          <RecentList />
         </ResizablePanel>
-        <ResizableHandle className="cursor-col-resize bg-gray-700 hover:w-1.5" />
+        <ResizableHandle className="cursor-col-resize bg-gray hover:w-1.5" />
         <ResizablePanel defaultSize={73} minSize={50} className="h-full">
-          
+          <Chats />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
