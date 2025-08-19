@@ -5,7 +5,7 @@ export const enhancedMentionStyle = {
     border: "none",
     color: "white",
     fontSize: 14,
-    borderRadius: 6,
+    // borderRadius: 6,
     fontWeight: "normal",
     minHeight: "24px",
     maxHeight: "128px",
@@ -38,7 +38,7 @@ export const enhancedMentionStyle = {
     },
     input: {
       padding: 0,
-      borderRadius: 6,
+      // borderRadius: 6,
       fontSize: 14,
       outline: "none",
       border: "none",
@@ -48,7 +48,7 @@ export const enhancedMentionStyle = {
       maxHeight: "128px",
       lineHeight: "1.5",
       fontFamily: "inherit",
-      wordWrap: "break-word",
+      wordWrap: "break-word" as const,
     },
   },
 
@@ -71,7 +71,7 @@ export const enhancedMentionStyle = {
       alignItems: "center",
       gap: "12px",
       lineHeight: "1.4",
-      wordWrap: "break-word",
+      wordWrap: "break-word" as const,
       "&focused": {
         backgroundColor: "#005c4b",
         color: "#E9EDEF",

@@ -14,7 +14,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../../components/ui/popover";
-import { IChatUser } from "../../../interfaces/chat.interface";
 import { IMessageInputProps } from "../../../interfaces/message.interface";
 import MentionInputComponent from "./mention-input";
 
@@ -37,7 +36,6 @@ const MessageInput: React.FC<IMessageInputProps> = ({
       length: number;
     }>
   >([]);
-  const [isRecording, setIsRecording] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mentionTimeoutRef = useRef<number>();
@@ -88,66 +86,6 @@ const MessageInput: React.FC<IMessageInputProps> = ({
     []
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setMessage(value);
-
-    if (!isGroup && textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      const newHeight = Math.min(textareaRef.current.scrollHeight, 128);
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (hasContent) {
-        handleSend();
-      }
-      return;
-    }
-  };
-
-  const insertMention = (user: IChatUser) => {};
-
-  const filteredUsers = users.filter((user) => user.type === "user");
-
-  const renderMessageWithMentions = (text: string) => {
-    if (!mentions.length) return text;
-
-    let lastIndex = 0;
-    const elements: React.ReactNode[] = [];
-
-    mentions.forEach((mention, index) => {
-      if (mention.start > lastIndex) {
-        elements.push(
-          <span key={`text-${index}`} className="text-light">
-            {text.slice(lastIndex, mention.start)}
-          </span>
-        );
-      }
-      elements.push(
-        <span key={`input-mention-${index}`} className="text-blue font-medium">
-          @{mention.name}
-        </span>
-      );
-
-      lastIndex = mention.start + mention.length;
-    });
-
-    // add remaining text
-    if (lastIndex < text.length) {
-      elements.push(
-        <span key="text-end" className="text-light">
-          {text.slice(lastIndex)}
-        </span>
-      );
-    }
-
-    return elements;
-  };
-
   const handleSend = () => {
     if (message.trim()) {
       onSendMessage({
@@ -176,20 +114,6 @@ const MessageInput: React.FC<IMessageInputProps> = ({
     console.log("Handle attachment");
   };
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    console.log("Toggle recording:", !isRecording);
-  };
-
-  const handleEmojiSelect = (emoji: string) => {
-    setMessage((prev) => prev + emoji);
-  };
-
-  const handleEmojiClick = (emojiObject: any) => {
-    setMessage((prev) => prev + emojiObject.emoji);
-    setShowEmojiPicker(false);
-  };
-
   return (
     <div className="relative">
       {replyTo && (
@@ -213,34 +137,34 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
       <div className="p-4">
         <div className="relative flex items-end bg-dark3/90 backdrop-blur-sm border border-dark2 rounded-3xl transition-all focus-within:border-green focus-within:ring-1 focus-within:ring-green/50 shadow-sm min-h-[48px]">
-          <div className="flex items-end pb-1 pl-3">
+          <div className="flex items-end p-1">
             <Popover>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hover:bg-dark2 text-gray hover:text-green transition-colors rounded-full p-2 h-8 w-8 flex items-center justify-center"
+                  className="hover:bg-dark p-2.5 text-gray hover:text-green transition-colors rounded-full size-6 flex items-center justify-center"
                   type="button"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <PlusIcon className="size-6" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
-                className="bg-dark2 w-auto border border-dark3 p-2"
+                className="bg-dark2 w-auto border border-dark3 px-3 py-1"
                 align="start"
                 side="top"
                 sideOffset={10}
               >
                 <div className="space-y-1">
                   <button
-                    className="w-full flex items-center gap-3 p-2 text-gray hover:text-white hover:bg-dark rounded transition-colors whitespace-nowrap"
+                    className="w-full p-2 -ml-2 flex items-center gap-3 text-gray hover:text-white hover:bg-dark rounded transition-colors whitespace-nowrap"
                     onClick={handleAttachment}
                   >
                     <FileIcon className="w-4 h-4 text-white" />
                     <span className="text-sm font-medium">Document</span>
                   </button>
                   <button
-                    className="w-full flex items-center gap-3 p-2 text-gray hover:text-white hover:bg-dark rounded transition-colors whitespace-nowrap"
+                    className="w-full p-2 -ml-2 flex items-center gap-3 text-gray hover:text-white hover:bg-dark rounded transition-colors whitespace-nowrap"
                     onClick={handleAttachment}
                   >
                     <MonitorIcon className="w-4 h-4 text-white" />
@@ -262,27 +186,27 @@ const MessageInput: React.FC<IMessageInputProps> = ({
             />
           </div>
 
-          <div className="flex items-end pb-1 pr-3 gap-1">
+          <div className="flex items-end p-1 gap-1">
             <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hover:bg-dark2 text-gray hover:text-green transition-colors rounded-full p-2 h-8 w-8 flex items-center justify-center"
+                  className="hover:bg-dark text-gray hover:text-green transition-colors rounded-full p-2.5 size-6 flex items-center justify-center"
                   type="button"
                 >
-                  <Smile className="w-5 h-5" />
+                  <Smile className="size-6" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
                 className="w-auto p-0 border-none bg-transparent shadow-none"
                 align="end"
                 side="top"
-                sideOffset={10}
-                avoidCollisions={true}
               >
                 <EmojiPicker
-                  onEmojiClick={handleEmojiClick}
+                  onEmojiClick={(emojiData) => {
+                    setMessage((prev) => prev + emojiData.emoji);
+                  }}
                   theme={Theme.DARK}
                   height={400}
                   width={350}
@@ -301,11 +225,12 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
             {hasContent && (
               <Button
-                onClick={handleSend}
-                className="bg-green hover:bg-green/90 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center transition-all ml-1"
                 size="sm"
+                className="text-dark bg-green2 transition-colors rounded-full p-2.5 size-6 cursor-pointer"
+                type="button"
+                onClick={handleSend}
               >
-                <SendIcon className="w-4 h-4" />
+                <SendIcon className="size-6" />
               </Button>
             )}
           </div>
