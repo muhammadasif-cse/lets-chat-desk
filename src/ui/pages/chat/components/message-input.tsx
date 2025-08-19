@@ -4,8 +4,7 @@ import {
   MonitorIcon,
   PlusIcon,
   SendIcon,
-  Smile,
-  X,
+  Smile
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/button";
@@ -15,6 +14,7 @@ import {
   PopoverTrigger,
 } from "../../../components/ui/popover";
 import { IMessageInputProps } from "../../../interfaces/message.interface";
+import inputReplyRender from "../utils/input-reply-render";
 import MentionInputComponent from "./mention-input";
 
 const MessageInput: React.FC<IMessageInputProps> = ({
@@ -116,26 +116,9 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
   return (
     <div className="relative">
-      {replyTo && (
-        <div className="mb-3 bg-dark3/80 backdrop-blur-sm border-l-4 border-green pl-3 py-2 rounded flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="text-green text-sm font-medium mb-1">
-              Replying to {replyTo.senderName}
-            </div>
-            <div className="text-gray text-sm truncate">{replyTo.text}</div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="p-1 hover:bg-dark3 text-gray hover:text-gray2 ml-2"
-            onClick={onCancelReply}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
+      {replyTo && inputReplyRender({ replyTo, onCancelReply })}
 
-      <div className="p-4">
+      <div className="px-4 pb-2">
         <div className="relative flex items-end bg-dark3/90 backdrop-blur-sm border border-dark2 rounded-3xl transition-all focus-within:border-green focus-within:ring-1 focus-within:ring-green/50 shadow-sm min-h-[48px]">
           <div className="flex items-end p-1">
             <Popover>

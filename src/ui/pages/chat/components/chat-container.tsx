@@ -135,10 +135,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     setReplyTo(null);
   };
 
-  const handleMessageLongPress = (message: IChatMessage) => {
-    // Removed - we'll handle reply via dropdown menu instead
-  };
-
   const handleReplyToMessage = (message: IChatMessage) => {
     if (message.text) {
       setReplyTo({
@@ -203,7 +199,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-dark overflow-hidden">
-      {/* Fixed Header */}
       <div className="flex-shrink-0 sticky top-0 z-30">
         <Header
           selectedChat={selectedChat}
@@ -215,7 +210,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
         />
       </div>
 
-      {/* Messages Area - takes remaining space */}
       <div className="flex-1 relative overflow-hidden">
         <div
           ref={messagesContainerRef}
@@ -237,7 +231,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
             </div>
           ) : (
             <>
-              {/* Loading indicator for older messages */}
               {hasMoreMessages && (
                 <div ref={topRef} className="flex justify-center py-4">
                   {isLoadingOlder ? (
@@ -280,14 +273,12 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                 />
               ))}
 
-              {/* Bottom scroll detection */}
               <div ref={bottomRef} className="h-1" />
               <div ref={messagesEndRef} />
             </>
           )}
         </div>
 
-        {/* Scroll to bottom button */}
         {!shouldScrollToBottom && (
           <div className="absolute bottom-4 right-6 z-20 size-6">
             <Button
@@ -301,7 +292,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
         )}
       </div>
 
-      {/* Fixed Footer */}
       <div className="flex-shrink-0 sticky bottom-0 z-30">
         <MessageInput
           onSendMessage={handleSendMessage}
