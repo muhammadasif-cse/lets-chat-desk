@@ -8,6 +8,7 @@ export const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => {
       width="16"
       preserveAspectRatio="xMidYMid meet"
       fill="none"
+      className="size-3"
       {...props}
     >
       <title>msg-check</title>
@@ -27,6 +28,7 @@ export const Check2Icon = (props: React.SVGProps<SVGSVGElement>) => {
       width="16"
       preserveAspectRatio="xMidYMid meet"
       fill="none"
+      className="size-3.5"
       {...props}
     >
       <title>msg-dblcheck</title>

@@ -1,12 +1,12 @@
 import { useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../redux/store";
-import { IRecentChatUsers } from "../../interfaces/user";
-import { TPermission } from "../types/chat.type";
 import { toast } from "sonner";
-import { useGetRecentChatUsersMutation } from "../../redux/store/mutations";
-import { setPermission, setRecentChatUsers } from "../../redux/store/actions";
+import { IRecentChatUsers } from "../../interfaces/user";
 import { useAppSelector } from "../../redux/selector";
+import { AppDispatch } from "../../redux/store";
+import { setPermission, setRecentChatUsers } from "../../redux/store/actions";
+import { useGetRecentChatUsersMutation } from "../../redux/store/mutations";
+import { TChatPermissions } from "../../redux/store/state";
 import { TResponse } from "../types/api-response.type";
 import { TRecentChat } from "../types/chat-api-response.type";
 
@@ -32,14 +32,16 @@ export const useGetRecentUsers = (): {
       console.log("🚀 ~ useGetRecentUsers ~ data:", result);
 
       if (code === 200 && Array.isArray(result)) {
-        const permissions: TPermission[] = result.map((item: TRecentChat) => ({
-          id: item.id,
-          isEditGroupSettings: item.isEditGroupSettings,
-          isSendMessages: item.isSendMessages,
-          isAddMembers: item.isAddMembers,
-          isAdmin: item.isAdmin,
-          hasDeleteRequest: item.hasDeleteRequest,
-        }));
+        const permissions: TChatPermissions[] = result.map(
+          (item: TRecentChat) => ({
+            id: item.id,
+            isEditGroupSettings: item.isEditGroupSettings,
+            isSendMessages: item.isSendMessages,
+            isAddMembers: item.isAddMembers,
+            isAdmin: item.isAdmin,
+            hasDeleteRequest: item.hasDeleteRequest,
+          })
+        );
 
         const chatUsers: IRecentChatUsers[] = result.map(
           (item: TRecentChat) => ({

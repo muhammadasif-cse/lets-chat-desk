@@ -1,8 +1,10 @@
 export interface IChatUser {
   id: string;
   name: string;
+  username?: string;
   photo?: string;
   type: "user" | "group";
+  memberCount?: number; // For groups
 }
 
 export interface IMessageMention {
@@ -66,13 +68,6 @@ export interface ISelectedChat {
   memberCount?: number;
 }
 
-interface User {
-  id: string;
-  name: string;
-  photo?: string;
-  type?: "user" | "group";
-}
-
 export interface IChatContainerProps {
   selectedChat?: {
     id: string | number;
@@ -84,7 +79,7 @@ export interface IChatContainerProps {
     memberCount?: number;
   };
   messages?: IChatMessage[];
-  users?: User[];
+  users?: IChatUser[];
   currentUserId?: string;
   onSendMessage?: (message: {
     text: string;

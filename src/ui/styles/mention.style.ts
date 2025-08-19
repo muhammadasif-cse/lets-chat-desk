@@ -1,0 +1,85 @@
+export const enhancedMentionStyle = {
+  control: {
+    backgroundColor: "transparent",
+    outline: "none",
+    border: "none",
+    color: "white",
+    fontSize: 14,
+    borderRadius: 6,
+    fontWeight: "normal",
+    minHeight: "24px",
+    maxHeight: "128px",
+    lineHeight: "1.5",
+    fontFamily: "inherit",
+  },
+
+  "&multiLine": {
+    control: {
+      outline: "none",
+      border: "none",
+      color: "white",
+      backgroundColor: "transparent",
+      minHeight: "24px",
+      maxHeight: "128px",
+      overflow: "auto",
+      lineHeight: "1.5",
+    },
+    highlighter: {
+      padding: 0,
+      fontSize: 14,
+      outline: "none",
+      border: "none",
+      color: "white",
+      minHeight: "24px",
+      maxHeight: "128px",
+      overflow: "hidden",
+      lineHeight: "1.5",
+      fontFamily: "inherit",
+    },
+    input: {
+      padding: 0,
+      borderRadius: 6,
+      fontSize: 14,
+      outline: "none",
+      border: "none",
+      color: "white",
+      resize: "none" as const,
+      minHeight: "24px",
+      maxHeight: "128px",
+      lineHeight: "1.5",
+      fontFamily: "inherit",
+      wordWrap: "break-word",
+    },
+  },
+
+  suggestions: {
+    list: {
+      backgroundColor: "#2a3942",
+      border: "1px solid #2a3942",
+      fontSize: 14,
+      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+      maxHeight: 200,
+      overflow: "auto",
+      zIndex: 9999,
+    },
+    item: {
+      padding: "12px 16px",
+      borderBottom: "1px solid rgba(255,255,255,0.1)",
+      cursor: "pointer",
+      color: "#E9EDEF",
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      lineHeight: "1.4",
+      wordWrap: "break-word",
+      "&focused": {
+        backgroundColor: "#005c4b",
+        color: "#E9EDEF",
+      },
+    },
+  },
+};
+
+export const enhancedDisplayMentionStyle = {
+  backgroundColor: "#005c4b",
+};

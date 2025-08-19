@@ -1,60 +1,34 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import {
-  Send,
-  Paperclip,
-  Mic,
+  FileIcon,
+  MonitorIcon,
+  PlusIcon,
+  SendIcon,
   Smile,
   X,
-  User,
-  Users as UsersIcon,
 } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../../components/ui/popover";
+import { IChatUser } from "../../../interfaces/chat.interface";
+import { IMessageInputProps } from "../../../interfaces/message.interface";
+import MentionInputComponent from "./mention-input";
 
-interface User {
-  id: string;
-  name: string;
-  photo?: string;
-  type?: "user" | "group";
-}
-
-interface MessageInputProps {
-  onSendMessage: (message: {
-    text: string;
-    mentions: Array<{
-      id: string;
-      name: string;
-      start: number;
-      length: number;
-    }>;
-    replyTo?: {
-      id: string;
-      text: string;
-      senderName: string;
-    };
-  }) => void;
-  onTyping?: (isTyping: boolean) => void;
-  users?: User[];
-  replyTo?: {
-    id: string;
-    text: string;
-    senderName: string;
-  } | null;
-  onCancelReply?: () => void;
-  placeholder?: string;
-}
-
-const MessageInput: React.FC<MessageInputProps> = ({
+const MessageInput: React.FC<IMessageInputProps> = ({
   onSendMessage,
   onTyping,
   users = [],
   replyTo,
   onCancelReply,
   placeholder = "Type a message",
+  isGroup = false,
 }) => {
   const [message, setMessage] = useState("");
-  const [showMentions, setShowMentions] = useState(false);
-  const [mentionQuery, setMentionQuery] = useState("");
-  const [mentionPosition, setMentionPosition] = useState(0);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [mentions, setMentions] = useState<
     Array<{
       id: string;
@@ -68,13 +42,19 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mentionTimeoutRef = useRef<number>();
 
-  // Handle typing indicator
+  const hasContent = message.trim().length > 0;
+
+  useEffect(() => {
+    if (message === "" && textareaRef.current) {
+      textareaRef.current.style.height = "24px";
+    }
+  }, [message]);
+
   useEffect(() => {
     if (onTyping) {
       onTyping(message.length > 0);
     }
 
-    // Clear typing after 3 seconds of inactivity
     if (mentionTimeoutRef.current) {
       clearTimeout(mentionTimeoutRef.current);
     }
@@ -92,66 +72,81 @@ const MessageInput: React.FC<MessageInputProps> = ({
     };
   }, [message, onTyping]);
 
+  const handleMentionInputChange = useCallback(
+    (
+      value: string,
+      extractedMentions: Array<{
+        id: string;
+        name: string;
+        start: number;
+        length: number;
+      }>
+    ) => {
+      setMessage(value);
+      setMentions(extractedMentions);
+    },
+    []
+  );
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    const cursorPosition = e.target.selectionStart;
-
     setMessage(value);
 
-    // Check for @ mentions
-    const textBeforeCursor = value.slice(0, cursorPosition);
-    const mentionMatch = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
-
-    if (mentionMatch) {
-      setShowMentions(true);
-      setMentionQuery(mentionMatch[1]);
-      setMentionPosition(cursorPosition - mentionMatch[0].length);
-    } else {
-      setShowMentions(false);
-      setMentionQuery("");
+    if (!isGroup && textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 128);
+      textareaRef.current.style.height = `${newHeight}px`;
     }
   };
 
-  const insertMention = (user: User) => {
-    const beforeMention = message.slice(0, mentionPosition);
-    const afterMention = message.slice(
-      mentionPosition + mentionQuery.length + 1
-    );
-    const mentionText = `@${user.name}`;
-
-    const newMessage = beforeMention + mentionText + " " + afterMention;
-    const mentionStart = mentionPosition;
-    const mentionLength = mentionText.length;
-
-    setMessage(newMessage);
-    setMentions((prev) => [
-      ...prev.filter((m) => m.start !== mentionStart),
-      {
-        id: user.id,
-        name: user.name,
-        start: mentionStart,
-        length: mentionLength,
-      },
-    ]);
-
-    setShowMentions(false);
-    setMentionQuery("");
-
-    // Focus back to textarea
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(
-          mentionStart + mentionLength + 1,
-          mentionStart + mentionLength + 1
-        );
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (hasContent) {
+        handleSend();
       }
-    }, 0);
+      return;
+    }
   };
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(mentionQuery.toLowerCase())
-  );
+  const insertMention = (user: IChatUser) => {};
+
+  const filteredUsers = users.filter((user) => user.type === "user");
+
+  const renderMessageWithMentions = (text: string) => {
+    if (!mentions.length) return text;
+
+    let lastIndex = 0;
+    const elements: React.ReactNode[] = [];
+
+    mentions.forEach((mention, index) => {
+      if (mention.start > lastIndex) {
+        elements.push(
+          <span key={`text-${index}`} className="text-light">
+            {text.slice(lastIndex, mention.start)}
+          </span>
+        );
+      }
+      elements.push(
+        <span key={`input-mention-${index}`} className="text-blue font-medium">
+          @{mention.name}
+        </span>
+      );
+
+      lastIndex = mention.start + mention.length;
+    });
+
+    // add remaining text
+    if (lastIndex < text.length) {
+      elements.push(
+        <span key="text-end" className="text-light">
+          {text.slice(lastIndex)}
+        </span>
+      );
+    }
+
+    return elements;
+  };
 
   const handleSend = () => {
     if (message.trim()) {
@@ -162,47 +157,53 @@ const MessageInput: React.FC<MessageInputProps> = ({
       });
       setMessage("");
       setMentions([]);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.style.height = "24px";
+          }
+        }, 0);
+      }
+
       if (onCancelReply) {
         onCancelReply();
       }
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   const handleAttachment = () => {
-    // Handle file attachment
     console.log("Handle attachment");
   };
 
   const toggleRecording = () => {
     setIsRecording(!isRecording);
-    // Handle voice recording
     console.log("Toggle recording:", !isRecording);
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    setMessage((prev) => prev + emoji);
+  };
+
+  const handleEmojiClick = (emojiObject: any) => {
+    setMessage((prev) => prev + emojiObject.emoji);
+    setShowEmojiPicker(false);
+  };
+
   return (
-    <div className="bg-[#2A3942] border-t border-[#3B4A54] p-4">
-      {/* Reply preview */}
+    <div className="relative">
       {replyTo && (
-        <div className="mb-3 bg-[#202C33] border-l-4 border-[#00A884] pl-3 py-2 rounded flex items-start justify-between">
+        <div className="mb-3 bg-dark3/80 backdrop-blur-sm border-l-4 border-green pl-3 py-2 rounded flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <div className="text-[#00A884] text-sm font-medium mb-1">
+            <div className="text-green text-sm font-medium mb-1">
               Replying to {replyTo.senderName}
             </div>
-            <div className="text-[#8696A0] text-sm truncate">
-              {replyTo.text}
-            </div>
+            <div className="text-gray text-sm truncate">{replyTo.text}</div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="p-1 hover:bg-[#3B4A54] text-[#8696A0] hover:text-[#E9EDEF] ml-2"
+            className="p-1 hover:bg-dark3 text-gray hover:text-gray2 ml-2"
             onClick={onCancelReply}
           >
             <X className="w-4 h-4" />
@@ -210,96 +211,105 @@ const MessageInput: React.FC<MessageInputProps> = ({
         </div>
       )}
 
-      {/* Mention suggestions */}
-      {showMentions && filteredUsers.length > 0 && (
-        <div className="mb-3 bg-[#202C33] rounded-lg border border-[#3B4A54] max-h-48 overflow-y-auto">
-          {filteredUsers.slice(0, 5).map((user) => (
-            <button
-              key={user.id}
-              className="w-full flex items-center space-x-3 p-3 hover:bg-[#3B4A54] transition-colors text-left"
-              onClick={() => insertMention(user)}
-            >
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-[#374151] flex items-center justify-center">
-                {user.photo ? (
-                  <img
-                    src={user.photo}
-                    alt={user.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-[#374151] flex items-center justify-center">
-                    {user.type === "group" ? (
-                      <UsersIcon className="w-4 h-4 text-[#8696A0]" />
-                    ) : (
-                      <User className="w-4 h-4 text-[#8696A0]" />
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[#E9EDEF] text-sm font-medium truncate">
-                  {user.name}
+      <div className="p-4">
+        <div className="relative flex items-end bg-dark3/90 backdrop-blur-sm border border-dark2 rounded-3xl transition-all focus-within:border-green focus-within:ring-1 focus-within:ring-green/50 shadow-sm min-h-[48px]">
+          <div className="flex items-end pb-1 pl-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-dark2 text-gray hover:text-green transition-colors rounded-full p-2 h-8 w-8 flex items-center justify-center"
+                  type="button"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="bg-dark2 w-auto border border-dark3 p-2"
+                align="start"
+                side="top"
+                sideOffset={10}
+              >
+                <div className="space-y-1">
+                  <button
+                    className="w-full flex items-center gap-3 p-2 text-gray hover:text-white hover:bg-dark rounded transition-colors whitespace-nowrap"
+                    onClick={handleAttachment}
+                  >
+                    <FileIcon className="w-4 h-4 text-white" />
+                    <span className="text-sm font-medium">Document</span>
+                  </button>
+                  <button
+                    className="w-full flex items-center gap-3 p-2 text-gray hover:text-white hover:bg-dark rounded transition-colors whitespace-nowrap"
+                    onClick={handleAttachment}
+                  >
+                    <MonitorIcon className="w-4 h-4 text-white" />
+                    <span className="text-sm font-medium">Photos & Videos</span>
+                  </button>
                 </div>
-              </div>
-            </button>
-          ))}
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex-1 py-3 relative">
+            <MentionInputComponent
+              value={message}
+              onChange={handleMentionInputChange}
+              onSubmit={handleSend}
+              placeholder={placeholder}
+              users={users}
+              disabled={false}
+            />
+          </div>
+
+          <div className="flex items-end pb-1 pr-3 gap-1">
+            <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-dark2 text-gray hover:text-green transition-colors rounded-full p-2 h-8 w-8 flex items-center justify-center"
+                  type="button"
+                >
+                  <Smile className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto p-0 border-none bg-transparent shadow-none"
+                align="end"
+                side="top"
+                sideOffset={10}
+                avoidCollisions={true}
+              >
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  theme={Theme.DARK}
+                  height={400}
+                  width={350}
+                  previewConfig={{
+                    defaultEmoji: "1f60a",
+                    defaultCaption: "Choose an emoji",
+                    showPreview: true,
+                  }}
+                  searchDisabled={false}
+                  autoFocusSearch={false}
+                  lazyLoadEmojis={false}
+                  emojiStyle={EmojiStyle.NATIVE}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {hasContent && (
+              <Button
+                onClick={handleSend}
+                className="bg-green hover:bg-green/90 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center transition-all ml-1"
+                size="sm"
+              >
+                <SendIcon className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      )}
-
-      {/* Input area */}
-      <div className="flex items-end space-x-2">
-        {/* Attachment button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="p-2 hover:bg-[#3B4A54] text-[#8696A0] hover:text-[#E9EDEF] mb-1"
-          onClick={handleAttachment}
-        >
-          <Paperclip className="w-5 h-5" />
-        </Button>
-
-        {/* Message input */}
-        <div className="flex-1 relative">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
-            placeholder={placeholder}
-            className="min-h-[44px] max-h-32 resize-none bg-[#2A3942] border border-[#3B4A54] text-[#E9EDEF] placeholder:text-[#8696A0] focus:border-[#00A884] focus:ring-1 focus:ring-[#00A884] pr-12 rounded-lg px-3 py-2 w-full outline-none"
-            rows={1}
-          />
-
-          {/* Emoji button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-2 bottom-2 p-1 hover:bg-[#3B4A54] text-[#8696A0] hover:text-[#E9EDEF]"
-          >
-            <Smile className="w-5 h-5" />
-          </Button>
-        </div>
-
-        {/* Send/Record button */}
-        {message.trim() ? (
-          <Button
-            onClick={handleSend}
-            className="p-2 bg-[#00A884] hover:bg-[#00A884]/90 text-white rounded-full mb-1"
-          >
-            <Send className="w-5 h-5" />
-          </Button>
-        ) : (
-          <Button
-            onClick={toggleRecording}
-            className={`p-2 rounded-full mb-1 ${
-              isRecording
-                ? "bg-red-500 hover:bg-red-600 text-white"
-                : "bg-[#00A884] hover:bg-[#00A884]/90 text-white"
-            }`}
-          >
-            <Mic className="w-5 h-5" />
-          </Button>
-        )}
       </div>
     </div>
   );

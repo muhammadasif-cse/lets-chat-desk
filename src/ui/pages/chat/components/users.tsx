@@ -1,9 +1,9 @@
 import { Check } from "lucide-react";
 import { useMemo, useState } from "react";
-import { formatTime } from "../utils/time-formatting";
 import { Check2Icon } from "../../../assets/icons/check.icon";
-import { IUsersProps } from "../../../types/user.type";
 import { UserIcon, UsersIcon } from "../../../assets/icons/users.icon";
+import { IUsersProps } from "../../../types/user.type";
+import { formatTime } from "../utils/time-formatting";
 
 const Users = ({
   data,
@@ -128,9 +128,9 @@ const Users = ({
   // message status icons
   const renderMessageStatus = () => {
     if (data.isSeen) {
-      return <Check2Icon className="w-4 h-4 text-blue" />;
+      return <Check2Icon className="text-blue" />;
     } else if (data.lastMessage) {
-      return <Check2Icon className="w-4 h-4 text-gray" />;
+      return <Check2Icon className="text-gray" />;
     }
     return null;
   };
@@ -188,7 +188,7 @@ const Users = ({
               {/* admin badge for groups */}
               {isGroup && data.isAdmin && (
                 <div className="flex-shrink-0 w-4 h-4 bg-green2 rounded-full flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 text-light" />
+                  <Check className="w-2.5 h-2.5 text-dark" />
                 </div>
               )}
             </div>
@@ -198,7 +198,6 @@ const Users = ({
             </span>
           </div>
 
-          {/* bottom row: Message and Status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               {/* message status for sent messages */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IChatMessage,
   IChatUser,
@@ -7,6 +7,10 @@ import {
   ISelectedChat,
 } from "../../../interfaces/chat.interface";
 import ChatContainer from "../components/chat-container";
+
+interface ChatsProps {
+  selectedUser?: any;
+}
 
 const sampleUsers: IChatUser[] = [
   {
@@ -27,92 +31,96 @@ const sampleUsers: IChatUser[] = [
     type: "group",
   },
 ];
-const sampleMessages: IChatMessage[] = [
-  {
-    id: "1",
-    text: "Hey everyone! How's the project going?",
-    timestamp: "2024-08-18T10:00:00Z",
-    isOwn: false,
-    isGroup: true,
-    senderName: "John Doe",
-    senderId: "1",
-    status: "read",
-  },
-  {
-    id: "2",
-    text: "Going well! @Jane Smith has been making great progress on the UI.",
-    timestamp: "2024-08-18T10:05:00Z",
-    isOwn: true,
-    isGroup: true,
-    senderName: "You",
-    senderId: "current-user",
-    status: "read",
-    mentions: [
-      {
-        id: "2",
-        name: "Jane Smith",
-        start: 13,
-        length: 10,
-      },
-    ],
-  },
-  {
-    id: "3",
-    text: "Thanks for the mention! The new design is looking great 🎨",
-    timestamp: "2024-08-18T10:07:00Z",
-    isOwn: false,
-    isGroup: true,
-    senderName: "Jane Smith",
-    senderId: "2",
-    status: "read",
-    replyTo: {
-      id: "2",
-      text: "Going well! @Jane Smith has been making great progress on the UI.",
-      senderName: "You",
-    },
-  },
-  {
-    id: "4",
-    text: "Here's the latest mockup",
-    timestamp: "2024-08-18T10:10:00Z",
-    isOwn: false,
-    isGroup: true,
-    senderName: "Jane Smith",
-    senderId: "2",
-    status: "delivered",
-    attachment: {
-      type: "image",
-      url: "https://example.com/mockup.jpg",
-    },
-  },
-  {
-    id: "5",
-    text: "Looks amazing! When can we start implementation?",
-    timestamp: "2024-08-18T10:15:00Z",
-    isOwn: true,
-    isGroup: true,
-    senderName: "You",
-    senderId: "current-user",
-    status: "sent",
-  },
-];
-const sampleChat: ISelectedChat = {
-  id: "team-group",
-  name: "Team Group",
-  photo: "https://example.com/group-photo.jpg",
-  type: "group",
-  isOnline: false,
-  memberCount: 5,
-};
-const Chats = () => {
-  const [messages, setMessages] = useState<IChatMessage[]>(sampleMessages);
-  const [selectedChat, setSelectedChat] = useState<ISelectedChat>(sampleChat);
+
+const Chats = ({ selectedUser }: ChatsProps) => {
+  const [messages, setMessages] = useState<IChatMessage[]>([]);
+  const [selectedChat, setSelectedChat] = useState<ISelectedChat | null>(null);
+
+  // Generate sample messages based on selected user
+  useEffect(() => {
+    if (selectedUser) {
+      const isGroup = selectedUser.type === "group";
+      const sampleMessages: IChatMessage[] = [
+        {
+          id: "1",
+          text: `Hey! How are you doing?`,
+          timestamp: "2024-08-18T10:00:00Z",
+          isOwn: false,
+          isGroup,
+          senderName: selectedUser.name || selectedUser.groupName,
+          senderId: selectedUser.id.toString(),
+          status: "read",
+        },
+        {
+          id: "2",
+          text: "I'm doing great! Thanks for asking 😊",
+          timestamp: "2024-08-18T10:05:00Z",
+          isOwn: true,
+          isGroup,
+          senderName: "You",
+          senderId: "current-user",
+          status: "read",
+        },
+        {
+          id: "3",
+          text: isGroup
+            ? "Welcome to the group everyone! 🎉"
+            : "That's awesome to hear!",
+          timestamp: "2024-08-18T10:07:00Z",
+          isOwn: false,
+          isGroup,
+          senderName: selectedUser.name || selectedUser.groupName,
+          senderId: selectedUser.id.toString(),
+          status: "read",
+        },
+        {
+          id: "4",
+          text: isGroup
+            ? "Thanks! Excited to be here 🚀"
+            : "Let's catch up soon!",
+          timestamp: "2024-08-18T10:10:00Z",
+          isOwn: true,
+          isGroup,
+          senderName: "You",
+          senderId: "current-user",
+          status: "delivered",
+        },
+        {
+          id: "5",
+          text: isGroup
+            ? "Feel free to share any ideas or questions"
+            : "Absolutely! Looking forward to it 👍",
+          timestamp: "2024-08-18T10:15:00Z",
+          isOwn: false,
+          isGroup,
+          senderName: selectedUser.name || selectedUser.groupName,
+          senderId: selectedUser.id.toString(),
+          status: "sent",
+        },
+      ];
+
+      setMessages(sampleMessages);
+
+      const chat: ISelectedChat = {
+        id: selectedUser.id.toString(),
+        name: selectedUser.name || selectedUser.groupName,
+        photo: selectedUser.photo,
+        type: selectedUser.type,
+        isOnline: selectedUser.isOnline || false,
+        memberCount: selectedUser.type === "group" ? 5 : undefined,
+      };
+
+      setSelectedChat(chat);
+    }
+  }, [selectedUser]);
 
   const handleSendMessage = (messageData: {
     text: string;
     mentions: IMessageMention[];
     replyTo?: IMessageReply;
   }) => {
+    if (!selectedChat) return;
+
     const newMessage: IChatMessage = {
       id: Date.now().toString(),
       text: messageData.text,
@@ -128,7 +136,6 @@ const Chats = () => {
 
     setMessages((prev) => [...prev, newMessage]);
 
-    // Simulate message status updates
     setTimeout(() => {
       setMessages((prev) =>
         prev.map((msg) =>
@@ -156,8 +163,12 @@ const Chats = () => {
     }, 3000);
   };
 
+  if (!selectedChat) {
+    return null;
+  }
+
   return (
-    <div>
+    <div className="h-full">
       <ChatContainer
         selectedChat={selectedChat}
         messages={messages}

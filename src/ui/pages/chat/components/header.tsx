@@ -84,7 +84,7 @@ const Header = ({
   };
 
   return (
-    <div className="h-16 bg-foreground border-b border-dark4 flex items-center px-4">
+    <div className="h-16 bg-foreground border-b border-dark4 flex items-center px-4 relative z-30">
       {onBack && (
         <Button
           variant="ghost"
@@ -92,13 +92,15 @@ const Header = ({
           className="mr-2 p-2 hover:bg-dark4 text-gray hover:text-light lg:hidden"
           onClick={onBack}
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="size-4" />
         </Button>
       )}
 
       {/* avatar and Info */}
-      <div className="flex items-center space-x-3 flex-1" onClick={onInfo}>
-        {/* avatar */}
+      <div
+        className="flex items-center space-x-3 flex-1 cursor-pointer"
+        onClick={onInfo}
+      >
         <div className="relative">
           <div className="w-10 h-10 border border-dark rounded-full overflow-hidden bg-dark3 flex items-center justify-center">
             {!imageError && selectedChat.photo ? (
@@ -117,15 +119,15 @@ const Header = ({
                 onError={handleImageError}
               />
             ) : isGroup ? (
-              <UsersIcon className="w-5 h-5 text-gray" />
+              <UsersIcon className="size-4 text-gray" />
             ) : (
-              <User className="w-5 h-5 text-gray" />
+              <User className="size-4 text-gray" />
             )}
           </div>
 
           {/* Online indicator */}
           {!isGroup && selectedChat.isOnline && (
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green2 rounded-full border-2 border-dark4"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green2 rounded-full border-2 border-foreground"></div>
           )}
         </div>
 
@@ -139,15 +141,14 @@ const Header = ({
       </div>
 
       {/* action buttons */}
-      <div className="flex items-center space-x-2">
-        {/* Search */}
+      <div className="flex items-center space-x-1">
         <Button
           variant="ghost"
           size="sm"
-          className="p-2 hover:bg-dark4 text-gray hover:text-light"
+          className="hover:bg-dark4 text-gray hover:text-light p-2"
           onClick={onSearch}
         >
-          <Search className="w-5 h-5" />
+          <Search className="size-4" />
         </Button>
 
         {/* video call (only for users) */}
@@ -155,10 +156,10 @@ const Header = ({
           <Button
             variant="ghost"
             size="sm"
-            className="p-2 hover:bg-dark4 text-gray hover:text-light"
+            className="hover:bg-dark4 text-gray hover:text-light p-2"
             onClick={onVideoCall}
           >
-            <Video className="w-5 h-5" />
+            <Video className="size-4" />
           </Button>
         )}
 
@@ -166,52 +167,53 @@ const Header = ({
         <Button
           variant="ghost"
           size="sm"
-          className="p-2 hover:bg-dark4 text-gray hover:text-light"
+          className="hover:bg-dark4 text-gray hover:text-light p-2"
           onClick={onCall}
         >
-          <Phone className="w-5 h-5" />
+          <Phone className="size-4" />
         </Button>
 
         {/* more options */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="hover:bg-dark4 text-gray hover:text-light"
+              className="hover:bg-dark4 text-gray hover:text-light p-2"
             >
-              <MoreVertical className="w-5 h-5" />
+              <MoreVertical className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="bg-dark4 border-dark4 text-light min-w-[180px]"
+            className="bg-dark4 border-dark4 text-light min-w-[180px] z-50"
+            sideOffset={8}
           >
             <DropdownMenuItem
-              className="hover:bg-dark4 cursor-pointer"
+              className="hover:bg-dark3 focus:bg-dark3 cursor-pointer text-light"
               onClick={onInfo}
             >
-              <Info className="w-4 h-4" />
+              <Info className="size-4 mr-2" />
               Contact info
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-dark4 cursor-pointer">
-              <VolumeXIcon className="w-4 h-4" />
+            <DropdownMenuItem className="hover:bg-dark3 focus:bg-dark3 cursor-pointer text-light">
+              <VolumeXIcon className="size-4 mr-2" />
               Mute notifications
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-dark4 cursor-pointer">
-              <MessageCircleMoreIcon className="w-4 h-4" />
+            <DropdownMenuItem className="hover:bg-dark3 focus:bg-dark3 cursor-pointer text-light">
+              <MessageCircleMoreIcon className="size-4 mr-2" />
               Awaiting Approval
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-dark4 cursor-pointer">
-              <BadgeCheckIcon className="w-4 h-4" />
+            <DropdownMenuItem className="hover:bg-dark3 focus:bg-dark3 cursor-pointer text-light">
+              <BadgeCheckIcon className="size-4 mr-2" />
               Approved Messages
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-dark4 cursor-pointer">
-              <Trash2Icon className="w-4 h-4" />
+            <DropdownMenuItem className="hover:bg-dark3 focus:bg-dark3 cursor-pointer text-light">
+              <Trash2Icon className="size-4 mr-2" />
               Delete Requests
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-dark4 cursor-pointer">
-              <MessageCircleXIcon className="w-4 h-4" />
+            <DropdownMenuItem className="hover:bg-dark3 focus:bg-dark3 cursor-pointer text-light">
+              <MessageCircleXIcon className="size-4 mr-2" />
               Rejected Messages
             </DropdownMenuItem>
           </DropdownMenuContent>
