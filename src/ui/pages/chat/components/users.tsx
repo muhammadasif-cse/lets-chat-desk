@@ -1,9 +1,10 @@
 import { Check } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Check2Icon } from "../../../assets/icons/check.icon";
 import { UserIcon, UsersIcon } from "../../../assets/icons/users.icon";
 import { IUsersProps } from "../../../types/user.type";
 import { formatTime } from "../utils/time-formatting";
+import MessagePreview from "./message-preview";
 
 const Users = ({
   data,
@@ -25,105 +26,6 @@ const Users = ({
 
   const isGroup = data.type === "group";
   const hasUnreadMessages = (data.unreadCount ?? 0) > 0;
-
-  // message preview
-  const messagePreview = useMemo(() => {
-    if (data.isTyping) {
-      return {
-        text: "typing...",
-        className: "text-green2 italic",
-        isTyping: true,
-      };
-    }
-
-    let message = data.message || data.lastMessage || "No messages yet";
-
-    // handle different message types
-    if (message === "Attachment(s)" || message.includes("📎")) {
-      return {
-        text: "🗃️ Document(s)",
-        className: hasUnreadMessages ? "text-light" : "text-gray",
-      };
-    }
-
-    if (message.includes("📷") || message === "Photo") {
-      return {
-        text: "📷 Photo(s)",
-        className: hasUnreadMessages ? "text-light" : "text-gray",
-      };
-    }
-
-    if (message.includes("🎵") || message.includes("audio")) {
-      return {
-        text: "🎵 Audio(s)",
-        className: hasUnreadMessages ? "text-light" : "text-gray",
-      };
-    }
-    if (message.includes("@[")) {
-      const mentionMatch = message.match(/@\[(.+?)\]\((\d+)\)/);
-      if (mentionMatch) {
-        const mentionName = mentionMatch[1];
-        return {
-          text: `@${mentionName}`,
-          className: hasUnreadMessages ? "text-light" : "text-gray",
-        };
-      }
-      return {
-        text: "@mention",
-        className: hasUnreadMessages ? "text-light" : "text-gray",
-      };
-    }
-
-    if (message.startsWith("http")) {
-      try {
-        const url = new URL(message);
-        return {
-          text: `🔗 ${url.hostname}`,
-          className: hasUnreadMessages ? "text-light" : "text-gray",
-        };
-      } catch {
-        return {
-          text: "🔗 Link",
-          className: hasUnreadMessages ? "text-light" : "text-gray",
-        };
-      }
-    }
-
-    // handle group messages with sender name
-    if (isGroup && message.includes(":")) {
-      const parts = message.split(":");
-      const sender = parts[0];
-      const content = parts.slice(1).join(":").trim();
-
-      if (content.length > 30) {
-        return {
-          text: `${sender}: ${content.substring(0, 30)}...`,
-          className: hasUnreadMessages ? "text-light" : "text-gray",
-        };
-      }
-
-      return {
-        text: message,
-        className: hasUnreadMessages ? "text-light" : "text-gray",
-      };
-    }
-
-    // regular message truncation
-    if (message.length > 35) {
-      message = message.substring(0, 35) + "...";
-    }
-
-    return {
-      text: message,
-      className: hasUnreadMessages ? "text-light" : "text-gray",
-    };
-  }, [
-    data.message,
-    data.lastMessage,
-    data.isTyping,
-    hasUnreadMessages,
-    isGroup,
-  ]);
 
   // message status icons
   const renderMessageStatus = () => {
@@ -203,25 +105,14 @@ const Users = ({
               {/* message status for sent messages */}
               {!isGroup && renderMessageStatus()}
 
-              {/* typing indicator */}
-              {messagePreview.isTyping && (
-                <div className="flex space-x-0.5 mr-1">
-                  <div className="w-1 h-1 bg-green2 rounded-full animate-bounce"></div>
-                  <div
-                    className="w-1 h-1 bg-green2 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.1s" }}
-                  ></div>
-                  <div
-                    className="w-1 h-1 bg-green2 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.2s" }}
-                  ></div>
-                </div>
-              )}
-
-              {/* message preview */}
-              <p className={`text-sm truncate ${messagePreview.className}`}>
-                {messagePreview.text}
-              </p>
+              {/* message preview with typing indicator */}
+              <MessagePreview
+                message={data.message}
+                lastMessage={data.lastMessage}
+                isTyping={data.isTyping}
+                hasUnreadMessages={hasUnreadMessages}
+                isGroup={isGroup}
+              />
             </div>
 
             {/* unread count */}
