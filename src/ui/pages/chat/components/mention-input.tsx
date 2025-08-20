@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { Mention, MentionsInput, OnChangeHandlerFunc } from "react-mentions";
-import { IMentionInputProps } from "../../../interfaces/mention-input.interface";
+import { IMentionInputProps } from "../../../../interfaces/mention-input";
 import {
   enhancedDisplayMentionStyle,
   enhancedMentionStyle,

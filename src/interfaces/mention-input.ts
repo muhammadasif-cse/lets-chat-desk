@@ -1,4 +1,4 @@
-import { IChatUser } from "./chat.interface";
+import { IChatUser } from "./chat";
 
 export interface IMentionInputProps {
   value: string;

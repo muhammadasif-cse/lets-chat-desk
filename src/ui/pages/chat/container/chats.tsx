@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+
 import {
   IChatMessage,
   IChatUser,
   IMessageMention,
   IMessageReply,
   ISelectedChat,
-} from "../../../interfaces/chat.interface";
+} from "../../../../interfaces/chat";
 import ChatContainer from "../components/chat-container";
 
 interface ChatsProps {
@@ -36,7 +37,7 @@ const Chats = ({ selectedUser }: ChatsProps) => {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [selectedChat, setSelectedChat] = useState<ISelectedChat | null>(null);
   console.log("selectedUser", selectedUser);
-  // Generate sample messages based on selected user
+
   useEffect(() => {
     if (selectedUser) {
       const isGroup = selectedUser.type === "group";

@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { IMessage } from "../../interfaces/message";
 import { IRecentUser } from "../../interfaces/user";
 import { RootState } from "../store";
 import initialState from "./state";
@@ -17,10 +18,14 @@ export const chatSlice = createSlice({
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
+    setChats: (state, action: PayloadAction<IMessage[]>) => {
+      state.chats = action.payload;
+    },
   },
 });
 
-export const { setRecentUsers, setPermissions, setSearchQuery } = chatSlice.actions;
+export const { setRecentUsers, setPermissions, setSearchQuery, setChats } =
+  chatSlice.actions;
 
 export default chatSlice.reducer;
 

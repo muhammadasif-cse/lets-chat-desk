@@ -1,12 +1,11 @@
 import { useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { IRecentUser } from "../../interfaces/user";
+import { IMessage } from "../../interfaces/message";
 import { useAppSelector } from "../../redux/selector";
 import { AppDispatch } from "../../redux/store";
-import { setPermissions, setRecentUsers } from "../../redux/store/actions";
+import { setChats } from "../../redux/store/actions";
 import { useGetChatsMutation } from "../../redux/store/mutations";
-import { TChatPermissions } from "../../redux/store/state.interface";
 import { TResponse } from "../types/api-response.type";
 
 export const useGetChats = (): {
@@ -28,6 +27,7 @@ export const useGetChats = (): {
         return;
       }
       hasFetchedRef.current = true;
+
       const reqBody = {
         groupId: type === "group" ? groupId : null,
         userId: type === "user" ? userId : null,
@@ -38,22 +38,10 @@ export const useGetChats = (): {
 
       try {
         const response = await getChats(reqBody as IGetChats).unwrap();
-        const { code, result } = response as TResponse<IRecentUser>;
+        const { code, result } = response as TResponse<IMessage>;
 
         if (code === 200 && Array.isArray(result)) {
-          const permissions: TChatPermissions[] = result.map(
-            (item: IRecentUser) => ({
-              id: item.id,
-              isEditGroupSettings: item.isEditGroupSettings,
-              isSendMessages: item.isSendMessages,
-              isAddMembers: item.isAddMembers,
-              isAdmin: item.isAdmin,
-              hasDeleteRequest: item.hasDeleteRequest,
-            })
-          );
-
-          dispatch(setPermissions(permissions));
-          dispatch(setRecentUsers(result as IRecentUser[]));
+          dispatch(setChats(result as IMessage[]));
         }
       } catch (error) {
         hasFetchedRef.current = false;

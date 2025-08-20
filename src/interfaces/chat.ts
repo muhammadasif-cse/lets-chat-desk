@@ -1,35 +1,119 @@
-import { TUser } from "../ui/types/user.type";
-import { IUserInfo } from "./user";
-
-export interface ChatHeaderProps {
-  user: IUserInfo;
-  gotoSpecificMessage: (gotoDirectMessage: IGotoSpecificMessage) => void;
-  handleBackToUserList?: () => void;
-}
-
-export interface IGotoSpecificMessage {
-  messageId: string;
-  senderId?: number;
-  receiverId?: number;
-  type?: string;
-  groupId?: string;
-}
-
-export interface IChatProps {
-  photo: string;
+export interface IChatUser {
+  id: string;
   name: string;
-  message: string;
-  date: string;
-  unreadMessage?: number;
-  active?: boolean;
+  username?: string;
+  photo?: string;
+  type: "user" | "group";
+  memberCount?: number; // For groups
 }
 
-export type GetChatsParams = {
-  userId?: number;
-  toUserId?: number;
-  groupId?: string;
-  type?: string;
-  userInfo: TUser;
-  callCount?: number;
-  mode?: "newer" | "older" | "replace";
-};
+export interface IMessageMention {
+  id: string;
+  name: string;
+  start: number;
+  length: number;
+}
+
+export interface IMessageReply {
+  id: string;
+  text: string;
+  senderName: string;
+}
+
+export interface IMessageAttachment {
+  type: "image" | "video" | "audio" | "document";
+  url: string;
+  name?: string;
+  size?: string;
+  duration?: string;
+}
+
+export interface IChatMessage {
+  id: string;
+  text?: string;
+  timestamp: string;
+  isOwn: boolean;
+  isGroup?: boolean;
+  senderName?: string;
+  senderPhoto?: string;
+  senderId?: string;
+  status?: "sending" | "sent" | "delivered" | "read";
+  attachment?: {
+    type: "image" | "video" | "audio" | "document";
+    url: string;
+    name?: string;
+    size?: string;
+    duration?: string;
+  };
+  mentions?: Array<{
+    id: string;
+    name: string;
+    start: number;
+    length: number;
+  }>;
+  replyTo?: {
+    id: string;
+    text: string;
+    senderName: string;
+  };
+}
+
+export interface ISelectedChat {
+  id: string;
+  name: string;
+  photo?: string;
+  type: "user" | "group";
+  isOnline?: boolean;
+  lastSeen?: string;
+  memberCount?: number;
+}
+
+export interface IChatContainerProps {
+  selectedChat?: {
+    id: string | number;
+    name: string;
+    photo?: string;
+    type: "user" | "group";
+    isOnline?: boolean;
+    lastSeen?: string;
+    memberCount?: number;
+  };
+  messages?: IChatMessage[];
+  users?: IChatUser[];
+  currentUserId?: string;
+  onSendMessage?: (message: {
+    text: string;
+    mentions: Array<{
+      id: string;
+      name: string;
+      start: number;
+      length: number;
+    }>;
+    replyTo?: {
+      id: string;
+      text: string;
+      senderName: string;
+    };
+  }) => void;
+  onBack?: () => void;
+  onCall?: () => void;
+  onVideoCall?: () => void;
+  onSearch?: () => void;
+  onInfo?: () => void;
+}
+interface IHeaderProps {
+  selectedChat?: {
+    id: string | number;
+    name: string;
+    photo?: string;
+    type: "user" | "group";
+    isOnline?: boolean;
+    lastSeen?: string;
+    memberCount?: number;
+  };
+  onBack?: () => void;
+  onCall?: () => void;
+  onVideoCall?: () => void;
+  onSearch?: () => void;
+  onInfo?: () => void;
+}
