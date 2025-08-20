@@ -14,4 +14,9 @@ export type TChatState = {
   permissions: TChatPermissions[];
   searchQuery: string;
   chats: IMessage[];
+  currentCallCount: number;
+  loadedCallCounts: number[];
+  hasMorePrevious: boolean;
+  hasMoreNext: boolean;
+  isLoadingMessages: boolean;
 };

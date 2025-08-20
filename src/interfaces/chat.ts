@@ -148,6 +148,12 @@ export interface IChatContainerProps {
   onVideoCall?: () => void;
   onSearch?: () => void;
   onInfo?: () => void;
+  onLoadPreviousMessages?: (callCount: number) => Promise<boolean>;
+  onLoadNextMessages?: (callCount: number) => Promise<boolean>;
+  currentCallCount?: number;
+  hasMorePrevious?: boolean;
+  hasMoreNext?: boolean;
+  loadedCallCounts?: number[];
 }
 
 export interface IHeaderProps {

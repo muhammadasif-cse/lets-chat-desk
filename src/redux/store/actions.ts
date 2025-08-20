@@ -20,11 +20,58 @@ export const chatSlice = createSlice({
     setChats: (state, action: PayloadAction<IMessage[]>) => {
       state.chats = action.payload;
     },
+    appendPreviousChats: (state, action: PayloadAction<IMessage[]>) => {
+      state.chats = [...action.payload, ...state.chats];
+    },
+    appendNextChats: (state, action: PayloadAction<IMessage[]>) => {
+      state.chats = [...state.chats, ...action.payload];
+    },
+    setCurrentCallCount: (state, action: PayloadAction<number>) => {
+      state.currentCallCount = action.payload;
+    },
+    addLoadedCallCount: (state, action: PayloadAction<number>) => {
+      if (!state.loadedCallCounts.includes(action.payload)) {
+        state.loadedCallCounts.push(action.payload);
+      }
+    },
+    setLoadedCallCounts: (state, action: PayloadAction<number[]>) => {
+      state.loadedCallCounts = action.payload;
+    },
+    setHasMorePrevious: (state, action: PayloadAction<boolean>) => {
+      state.hasMorePrevious = action.payload;
+    },
+    setHasMoreNext: (state, action: PayloadAction<boolean>) => {
+      state.hasMoreNext = action.payload;
+    },
+    setIsLoadingMessages: (state, action: PayloadAction<boolean>) => {
+      state.isLoadingMessages = action.payload;
+    },
+    resetChatState: (state) => {
+      state.chats = [];
+      state.currentCallCount = 0;
+      state.loadedCallCounts = [];
+      state.hasMorePrevious = false;
+      state.hasMoreNext = false;
+      state.isLoadingMessages = false;
+    },
   },
 });
 
-export const { setRecentUsers, setPermissions, setSearchQuery, setChats } =
-  chatSlice.actions;
+export const { 
+  setRecentUsers, 
+  setPermissions, 
+  setSearchQuery, 
+  setChats, 
+  appendPreviousChats,
+  appendNextChats,
+  setCurrentCallCount,
+  addLoadedCallCount,
+  setLoadedCallCounts,
+  setHasMorePrevious,
+  setHasMoreNext,
+  setIsLoadingMessages,
+  resetChatState
+} = chatSlice.actions;
 
 export default chatSlice.reducer;
 

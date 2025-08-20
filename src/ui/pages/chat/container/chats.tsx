@@ -18,34 +18,36 @@ interface ChatsProps {
 }
 
 const Chats = ({ selectedUser }: ChatsProps) => {
-  const { handleGetChats, isLoading, clearMessages } = useGetChats();
-  const { chats } = useAppSelector((state) => state.chat);
+  const { 
+    handleGetChats, 
+    handleLoadPreviousMessages,
+    handleLoadNextMessages,
+    isLoading, 
+    clearMessages 
+  } = useGetChats();
+  
+  const { 
+    chats, 
+    currentCallCount, 
+    hasMorePrevious,
+    hasMoreNext,
+    loadedCallCounts
+  } = useAppSelector((state) => state.chat);
+  
   const [selectedChat, setSelectedChat] = useState<ISelectedChat | null>(null);
+  const [chatParams, setChatParams] = useState<Omit<IGetChatsRequest, 'callCount'> | null>(null);
 
-  // Use refs to store the latest functions to avoid dependency issues
   const handleGetChatsRef = useRef(handleGetChats);
   const clearMessagesRef = useRef(clearMessages);
 
-  // Update refs when functions change
   handleGetChatsRef.current = handleGetChats;
   clearMessagesRef.current = clearMessages;
 
   const currentUserId = 1;
 
-  // Remove excessive logging to reduce console noise
-  // console.log("selectedUser", selectedUser);
-  // console.log("chats from redux", chats);
-
   useEffect(() => {
-    console.log("useEffect triggered with selectedUser:", selectedUser);
-
     if (selectedUser) {
-      console.log(
-        "Clearing messages and setting up new chat for:",
-        selectedUser.name
-      );
       clearMessagesRef.current();
-
       const chat: ISelectedChat = {
         id: selectedUser.id,
         name: selectedUser.name,
@@ -54,9 +56,8 @@ const Chats = ({ selectedUser }: ChatsProps) => {
         isOnline: selectedUser.type === "user" ? true : false,
         memberCount: selectedUser.type === "group" ? 0 : undefined,
       };
-
       setSelectedChat(chat);
-
+      
       const requestParams: IGetChatsRequest = {
         groupId: selectedUser.type === "group" ? selectedUser.id : null,
         toUserId:
@@ -66,14 +67,33 @@ const Chats = ({ selectedUser }: ChatsProps) => {
         callCount: 0,
       };
 
+      // Store chat params for pagination
+      setChatParams({
+        groupId: requestParams.groupId,
+        toUserId: requestParams.toUserId,
+        userId: requestParams.userId,
+        type: requestParams.type,
+      });
+
       console.log("Fetching chats with params:", requestParams);
       handleGetChatsRef.current(requestParams);
     } else {
       console.log("No user selected, clearing state");
       clearMessagesRef.current();
       setSelectedChat(null);
+      setChatParams(null);
     }
-  }, [selectedUser]); // Only selectedUser as dependency
+  }, [selectedUser]);
+
+  const handleLoadPrevious = async (callCount: number): Promise<boolean> => {
+    if (!chatParams) return false;
+    return await handleLoadPreviousMessages(callCount, chatParams);
+  };
+
+  const handleLoadNext = async (callCount: number): Promise<boolean> => {
+    if (!chatParams) return false;
+    return await handleLoadNextMessages(callCount, chatParams);
+  };
 
   const handleSendMessage = (messageData: ISendMessageData) => {
     if (!selectedChat) return;
@@ -102,7 +122,7 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
   if (!selectedChat) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex items-center justify-center bg-foreground">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
             No chat selected
@@ -115,8 +135,7 @@ const Chats = ({ selectedUser }: ChatsProps) => {
     );
   }
 
-  // Sample users for the chat
-  const sampleUsers: IChatUser[] = [
+  const groupUsers: IChatUser[] = [
     {
       id: currentUserId.toString(),
       name: "Current User",
@@ -141,9 +160,15 @@ const Chats = ({ selectedUser }: ChatsProps) => {
         <ChatContainer
           selectedChat={selectedChat}
           messages={chats}
-          users={sampleUsers}
+          users={groupUsers}
           currentUserId={currentUserId.toString()}
+          currentCallCount={currentCallCount}
+          hasMorePrevious={hasMorePrevious}
+          hasMoreNext={hasMoreNext}
+          loadedCallCounts={loadedCallCounts}
           onSendMessage={handleSendMessage}
+          onLoadPreviousMessages={handleLoadPrevious}
+          onLoadNextMessages={handleLoadNext}
           onBack={() => console.log("Back pressed")}
           onCall={() => console.log("Call pressed")}
           onVideoCall={() => console.log("Video call pressed")}
