@@ -61,7 +61,7 @@ export default function MessageReaction({
           onReactionClick={(reaction) => {
             setMessage((prev) => (prev || "") + reaction.emoji);
             setIsOpen(false);
-            handleOpenChange;
+            handleOpenChange(false);
           }}
         />
       </PopoverContent>
