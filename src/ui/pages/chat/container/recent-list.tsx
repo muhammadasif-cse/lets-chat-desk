@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
+import { IChatItem } from "../../../../interfaces/chat";
 import { useFilteredChats } from "../../../hooks/useFilteredChats";
 import { useGetRecentUsers } from "../../../hooks/useGetRecentUsers";
 import Users from "../components/users";
 import UsersSkeleton from "../components/users-skeleton";
 
 interface RecentListProps {
-  onUserSelect?: (user: any) => void;
+  onUserSelect?: (user: IChatItem) => void;
   selectedUserId?: string;
 }
 

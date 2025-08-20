@@ -1,34 +1,42 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { IMessage } from "../../interfaces/message";
-import { useAppSelector } from "../../redux/selector";
+import { IChatApiResponse, IGetChatsRequest } from "../../interfaces/chat";
 import { AppDispatch } from "../../redux/store";
 import { setChats } from "../../redux/store/actions";
 import { useGetChatsMutation } from "../../redux/store/mutations";
-import { TResponse } from "../types/api-response.type";
 
 export const useGetChats = (): {
-  handleGetChats: (params: IGetChats) => Promise<void>;
+  handleGetChats: (params: IGetChatsRequest) => Promise<void>;
   isLoading: boolean;
+  clearMessages: () => void;
 } => {
   const dispatch = useDispatch<AppDispatch>();
   const [getChats, { isLoading }] = useGetChatsMutation();
-  const { chats } = useAppSelector((state) => state.chat);
-  const hasFetchedRef = useRef(false);
+
+  const clearMessages = useCallback(() => {
+    dispatch(setChats([]));
+  }, [dispatch]);
 
   const handleGetChats = useCallback(
-    async ({ groupId, toUserId, type, userId, callCount }: IGetChats) => {
-      if (hasFetchedRef.current || isLoading || chats.length > 0) {
+    async ({
+      groupId,
+      toUserId,
+      type,
+      userId,
+      callCount,
+    }: IGetChatsRequest) => {
+      if (isLoading) {
         return;
       }
       if (!userId && !toUserId && !groupId) {
         toast.warning("Invalid parameters provided for fetching chat.");
         return;
       }
-      hasFetchedRef.current = true;
 
-      const reqBody = {
+      dispatch(setChats([]));
+
+      const reqBody: IGetChatsRequest = {
         groupId: type === "group" ? groupId : null,
         userId: type === "user" ? userId : null,
         toUserId: type === "user" ? toUserId : null,
@@ -37,14 +45,13 @@ export const useGetChats = (): {
       };
 
       try {
-        const response = await getChats(reqBody as IGetChats).unwrap();
-        const { code, result } = response as TResponse<IMessage>;
+        const response = await getChats(reqBody).unwrap();
+        const { code, result } = response as IChatApiResponse;
 
-        if (code === 200 && Array.isArray(result)) {
-          dispatch(setChats(result as IMessage[]));
+        if (code === 200 && Array.isArray(result.messages)) {
+          dispatch(setChats(result.messages));
         }
       } catch (error) {
-        hasFetchedRef.current = false;
         toast.error(
           (error as any)?.data?.message ||
             (error as any).message ||
@@ -52,8 +59,8 @@ export const useGetChats = (): {
         );
       }
     },
-    [dispatch, isLoading]
+    [dispatch, isLoading, getChats]
   );
 
-  return { handleGetChats, isLoading };
+  return { handleGetChats, isLoading, clearMessages };
 };

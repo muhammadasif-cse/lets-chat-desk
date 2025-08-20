@@ -2,7 +2,10 @@ import { SendIcon } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/button";
 
-import { IMessageInputProps } from "../../../interfaces/message.interface";
+import {
+  IMessageInputProps,
+  IMessageMention,
+} from "../../../../interfaces/chat";
 import inputReplyRender from "../utils/input-reply-render";
 import InputEmoji from "./input-emoji";
 import InputFileOption from "./input-file-option";
@@ -40,7 +43,7 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
   useEffect(() => {
     if (onTyping) {
-      onTyping(message.length > 0);
+      onTyping();
     }
 
     if (mentionTimeoutRef.current) {
@@ -49,7 +52,7 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
     mentionTimeoutRef.current = setTimeout(() => {
       if (onTyping) {
-        onTyping(false);
+        onTyping();
       }
     }, 3000);
 
@@ -78,9 +81,19 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
   const handleSend = () => {
     if (message.trim()) {
+      const transformedMentions: IMessageMention[] = mentions.map(
+        (mention) => ({
+          id: mention.id,
+          name: mention.name,
+          type: "user" as const,
+          startIndex: mention.start,
+          endIndex: mention.start + mention.length,
+        })
+      );
+
       onSendMessage({
         text: message.trim(),
-        mentions,
+        mentions: transformedMentions,
         replyTo: replyTo || undefined,
       });
       setMessage("");
@@ -120,7 +133,10 @@ const MessageInput: React.FC<IMessageInputProps> = ({
               onChange={handleMentionInputChange}
               onSubmit={handleSend}
               placeholder={placeholder}
-              users={users}
+              users={users.map((user) => ({
+                ...user,
+                type: user.type || "user",
+              }))}
               disabled={false}
             />
           </div>

@@ -1,187 +1,156 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
-  IChatMessage,
+  IChatItem,
   IChatUser,
-  IMessageMention,
-  IMessageReply,
+  IGetChatsRequest,
+  IMessage,
   ISelectedChat,
+  ISendMessageData,
 } from "../../../../interfaces/chat";
+import { useAppSelector } from "../../../../redux/selector";
+import { useGetChats } from "../../../hooks/useGetChats";
 import ChatContainer from "../components/chat-container";
+import Loading from "../utils/loading";
 
 interface ChatsProps {
-  selectedUser?: any;
+  selectedUser?: IChatItem;
 }
 
-const sampleUsers: IChatUser[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    photo: "https://example.com/photo1.jpg",
-    type: "user",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    photo: "https://example.com/photo2.jpg",
-    type: "user",
-  },
-  {
-    id: "3",
-    name: "Team Group",
-    type: "group",
-  },
-];
-
 const Chats = ({ selectedUser }: ChatsProps) => {
-  const [messages, setMessages] = useState<IChatMessage[]>([]);
+  const { handleGetChats, isLoading, clearMessages } = useGetChats();
+  const { chats } = useAppSelector((state) => state.chat);
   const [selectedChat, setSelectedChat] = useState<ISelectedChat | null>(null);
-  console.log("selectedUser", selectedUser);
+
+  // Use refs to store the latest functions to avoid dependency issues
+  const handleGetChatsRef = useRef(handleGetChats);
+  const clearMessagesRef = useRef(clearMessages);
+
+  // Update refs when functions change
+  handleGetChatsRef.current = handleGetChats;
+  clearMessagesRef.current = clearMessages;
+
+  const currentUserId = 1;
+
+  // Remove excessive logging to reduce console noise
+  // console.log("selectedUser", selectedUser);
+  // console.log("chats from redux", chats);
 
   useEffect(() => {
-    if (selectedUser) {
-      const isGroup = selectedUser.type === "group";
-      const sampleMessages: IChatMessage[] = [
-        {
-          id: "1",
-          text: `Hey! How are you doing?`,
-          timestamp: "2024-08-18T10:00:00Z",
-          isOwn: false,
-          isGroup,
-          senderName: selectedUser.name || selectedUser.groupName,
-          senderId: selectedUser.id.toString(),
-          status: "read",
-        },
-        {
-          id: "2",
-          text: "I'm doing great! Thanks for asking 😊",
-          timestamp: "2024-08-18T10:05:00Z",
-          isOwn: true,
-          isGroup,
-          senderName: "You",
-          senderId: "current-user",
-          status: "read",
-        },
-        {
-          id: "3",
-          text: isGroup
-            ? "Welcome to the group everyone! 🎉"
-            : "That's awesome to hear!",
-          timestamp: "2024-08-18T10:07:00Z",
-          isOwn: false,
-          isGroup,
-          senderName: selectedUser.name || selectedUser.groupName,
-          senderId: selectedUser.id.toString(),
-          status: "read",
-        },
-        {
-          id: "4",
-          text: isGroup
-            ? "Thanks! Excited to be here 🚀"
-            : "Let's catch up soon!",
-          timestamp: "2024-08-18T10:10:00Z",
-          isOwn: true,
-          isGroup,
-          senderName: "You",
-          senderId: "current-user",
-          status: "delivered",
-        },
-        {
-          id: "5",
-          text: isGroup
-            ? "Feel free to share any ideas or questions"
-            : "Absolutely! Looking forward to it 👍",
-          timestamp: "2024-08-18T10:15:00Z",
-          isOwn: false,
-          isGroup,
-          senderName: selectedUser.name || selectedUser.groupName,
-          senderId: selectedUser.id.toString(),
-          status: "sent",
-        },
-      ];
+    console.log("useEffect triggered with selectedUser:", selectedUser);
 
-      setMessages(sampleMessages);
+    if (selectedUser) {
+      console.log(
+        "Clearing messages and setting up new chat for:",
+        selectedUser.name
+      );
+      clearMessagesRef.current();
 
       const chat: ISelectedChat = {
-        id: selectedUser.id.toString(),
-        name: selectedUser.name || selectedUser.groupName,
+        id: selectedUser.id,
+        name: selectedUser.name,
         photo: selectedUser.photo,
         type: selectedUser.type,
-        isOnline: selectedUser.isOnline || false,
-        memberCount: selectedUser.type === "group" ? 5 : undefined,
+        isOnline: selectedUser.type === "user" ? true : false,
+        memberCount: selectedUser.type === "group" ? 0 : undefined,
       };
 
       setSelectedChat(chat);
-    }
-  }, [selectedUser]);
 
-  const handleSendMessage = (messageData: {
-    text: string;
-    mentions: IMessageMention[];
-    replyTo?: IMessageReply;
-  }) => {
+      const requestParams: IGetChatsRequest = {
+        groupId: selectedUser.type === "group" ? selectedUser.id : null,
+        toUserId:
+          selectedUser.type === "user" ? parseInt(selectedUser.id) : null,
+        userId: currentUserId,
+        type: selectedUser.type,
+        callCount: 0,
+      };
+
+      console.log("Fetching chats with params:", requestParams);
+      handleGetChatsRef.current(requestParams);
+    } else {
+      console.log("No user selected, clearing state");
+      clearMessagesRef.current();
+      setSelectedChat(null);
+    }
+  }, [selectedUser]); // Only selectedUser as dependency
+
+  const handleSendMessage = (messageData: ISendMessageData) => {
     if (!selectedChat) return;
 
-    const newMessage: IChatMessage = {
-      id: Date.now().toString(),
-      text: messageData.text,
-      timestamp: new Date().toISOString(),
-      isOwn: true,
-      isGroup: selectedChat.type === "group",
+    console.log("Sending message:", messageData);
+
+    const newMessage: IMessage = {
+      messageId: Date.now().toString(),
+      message: messageData.text,
+      date: new Date().toISOString(),
       senderName: "You",
-      senderId: "current-user",
+      userId: currentUserId,
+      toUserId: selectedChat.type === "user" ? parseInt(selectedChat.id) : 0,
       status: "sending",
-      mentions: messageData.mentions,
-      replyTo: messageData.replyTo,
+      type: selectedChat.type,
+      isApprovalNeeded: false,
+      isNotification: false,
+      parentMessageId: messageData.replyTo?.messageId || null,
+      parentMessageText: messageData.replyTo?.text || null,
+      reactions: [],
+      attachments: messageData.attachments || [],
+      eligibleUsers: null,
+      deleteRequestedAt: null,
     };
-
-    setMessages((prev) => [...prev, newMessage]);
-
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: "sent" as const } : msg
-        )
-      );
-    }, 1000);
-
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === newMessage.id
-            ? { ...msg, status: "delivered" as const }
-            : msg
-        )
-      );
-    }, 2000);
-
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: "read" as const } : msg
-        )
-      );
-    }, 3000);
   };
 
   if (!selectedChat) {
-    return null;
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            No chat selected
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400">
+            Select a conversation to start chatting
+          </p>
+        </div>
+      </div>
+    );
   }
+
+  // Sample users for the chat
+  const sampleUsers: IChatUser[] = [
+    {
+      id: currentUserId.toString(),
+      name: "Current User",
+      type: "user",
+    },
+    {
+      id: selectedChat.id,
+      name: selectedChat.name,
+      photo: selectedChat.photo,
+      type: selectedChat.type,
+      isOnline: selectedChat.isOnline,
+    },
+  ];
 
   return (
     <div className="h-full">
-      <ChatContainer
-        selectedChat={selectedChat}
-        messages={messages}
-        users={sampleUsers}
-        currentUserId="current-user"
-        onSendMessage={handleSendMessage}
-        onBack={() => console.log("Back pressed")}
-        onCall={() => console.log("Call pressed")}
-        onVideoCall={() => console.log("Video call pressed")}
-        onSearch={() => console.log("Search pressed")}
-        onInfo={() => console.log("Info pressed")}
-      />
+      {isLoading ? (
+        <div className="h-full flex items-center justify-center bg-foreground">
+          <Loading />
+        </div>
+      ) : (
+        <ChatContainer
+          selectedChat={selectedChat}
+          messages={chats}
+          users={sampleUsers}
+          currentUserId={currentUserId.toString()}
+          onSendMessage={handleSendMessage}
+          onBack={() => console.log("Back pressed")}
+          onCall={() => console.log("Call pressed")}
+          onVideoCall={() => console.log("Video call pressed")}
+          onSearch={() => console.log("Search pressed")}
+          onInfo={() => console.log("Info pressed")}
+        />
+      )}
     </div>
   );
 };

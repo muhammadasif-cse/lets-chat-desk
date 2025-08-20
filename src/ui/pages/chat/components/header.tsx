@@ -14,6 +14,7 @@ import {
   VolumeXIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { IHeaderProps } from "../../../../interfaces/chat";
 import { Button } from "../../../components/ui/button";
 import {
   DropdownMenu,

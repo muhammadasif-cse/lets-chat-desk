@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { IMessageProps } from "../../../interfaces/message.interface";
+import { IMessageProps } from "../../../../interfaces/chat";
 import { renderMessageStatus } from "../utils/message-status";
 import { renderAttachment } from "../utils/render-attachment";
 import { renderMessage } from "../utils/render-message";
@@ -58,11 +58,34 @@ const Message: React.FC<IMessageProps> = ({
                 {senderName}
               </div>
             )}
-            {renderReply({ replyTo, isOwn })}
-            {attachment ? renderAttachment({ attachment }) : null}
+            {renderReply({ 
+              replyTo: replyTo ? {
+                id: replyTo.messageId,
+                text: replyTo.text,
+                senderName: replyTo.senderName
+              } : undefined, 
+              isOwn 
+            })}
+            {attachment ? renderAttachment({ 
+              attachment: {
+                type: attachment.type,
+                url: attachment.url || attachment.filePath || "",
+                name: attachment.fileName,
+                size: attachment.size,
+                duration: attachment.duration
+              }
+            }) : null}
             {text && (
               <div className="text-light text-sm leading-5 break-words mb-1">
-                {renderMessage({ text, mentions, isOwn })}
+                {renderMessage({ 
+                  text, 
+                  mentions: mentions.map(mention => ({
+                    start: mention.startIndex,
+                    length: mention.endIndex - mention.startIndex,
+                    name: mention.name
+                  })), 
+                  isOwn 
+                })}
               </div>
             )}
             <div className="flex items-center justify-end space-x-1 mt-1">

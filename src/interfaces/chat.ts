@@ -1,62 +1,82 @@
-export interface IChatUser {
-  id: string;
-  name: string;
-  username?: string;
-  photo?: string;
+/** @format */
+
+export interface IMessage {
+  messageId: string;
+  parentMessageId: string | null;
+  parentMessageText: string | null;
+  date: string;
+  message: string;
+  senderName: string;
+  toUserId: number;
+  userId: number;
+  status: "sent" | "delivered" | "seen" | "failed" | "sending" | "queued";
   type: "user" | "group";
-  memberCount?: number; // For groups
+  isApprovalNeeded: boolean;
+  isApproved?: boolean;
+  isDeleteRequest?: boolean;
+  deleteRequestedAt?: string | null;
+  isRejected?: boolean;
+  isNotification?: boolean;
+  eligibleUsers?: number[] | null;
+  reactions: IMessageReaction[];
+  attachments: IMessageAttachment[];
+}
+
+
+export interface IMessageAttachment {
+  type: "image" | "video" | "audio" | "document";
+  filePath: string | null;
+  fileName: string;
+  url?: string;
+  size?: string;
+  duration?: string;
+}
+
+export interface IMessageReaction {
+  reaction: string;
+  count: number;
+  users: IMessageReactionUser[];
+}
+
+export interface IMessageReactionUser {
+  userId: number;
+  userName: string;
+  name: string;
+  photo: string;
+}
+
+export interface IMessageReply {
+  messageId: string;
+  text: string;
+  senderName: string;
 }
 
 export interface IMessageMention {
   id: string;
   name: string;
-  start: number;
-  length: number;
+  type: "user" | "group";
+  startIndex: number;
+  endIndex: number;
 }
 
-export interface IMessageReply {
+
+export interface IChatItem {
   id: string;
-  text: string;
-  senderName: string;
+  name: string;
+  photo: string;
+  description: string;
+  type: "user" | "group";
+  lastMessage: string;
+  lastMessageId: string;
+  lastMessageDate: string;
+  unreadCount: number;
+  isAdmin: boolean;
+  isEditGroupSettings: boolean;
+  isSendMessages: boolean;
+  isAddMembers: boolean;
+  hasDeleteRequest: boolean;
 }
 
-export interface IMessageAttachment {
-  type: "image" | "video" | "audio" | "document";
-  url: string;
-  name?: string;
-  size?: string;
-  duration?: string;
-}
-
-export interface IChatMessage {
-  id: string;
-  text?: string;
-  timestamp: string;
-  isOwn: boolean;
-  isGroup?: boolean;
-  senderName?: string;
-  senderPhoto?: string;
-  senderId?: string;
-  status?: "sending" | "sent" | "delivered" | "read";
-  attachment?: {
-    type: "image" | "video" | "audio" | "document";
-    url: string;
-    name?: string;
-    size?: string;
-    duration?: string;
-  };
-  mentions?: Array<{
-    id: string;
-    name: string;
-    start: number;
-    length: number;
-  }>;
-  replyTo?: {
-    id: string;
-    text: string;
-    senderName: string;
-  };
-}
 
 export interface ISelectedChat {
   id: string;
@@ -66,54 +86,107 @@ export interface ISelectedChat {
   isOnline?: boolean;
   lastSeen?: string;
   memberCount?: number;
+  totalOnline?: number;
+}
+
+
+export interface IChatUser {
+  id: string;
+  name: string;
+  username?: string;
+  photo?: string;
+  type: "user" | "group";
+  memberCount?: number;
+  isOnline?: boolean;
+  lastSeen?: string;
+}
+
+
+export interface ISendMessageData {
+  text: string;
+  mentions: IMessageMention[];
+  replyTo?: IMessageReply;
+  attachments?: IMessageAttachment[];
+}
+
+
+export interface IGetChatsRequest {
+  groupId?: string | null;
+  toUserId?: number | null;
+  userId?: number | null;
+  type: "user" | "group";
+  callCount: number;
+}
+
+export interface IChatApiResponse {
+  code: number;
+  status: string;
+  message: string;
+  result: {
+    isOnline: boolean;
+    totalOnline: number;
+    type: "user" | "group";
+    count: number;
+    messages: IMessage[];
+  };
+}
+
+export interface IChatListApiResponse {
+  code: number;
+  status: string;
+  message: string;
+  result: IChatItem[];
 }
 
 export interface IChatContainerProps {
-  selectedChat?: {
-    id: string | number;
-    name: string;
-    photo?: string;
-    type: "user" | "group";
-    isOnline?: boolean;
-    lastSeen?: string;
-    memberCount?: number;
-  };
-  messages?: IChatMessage[];
+  selectedChat?: ISelectedChat;
+  messages?: IMessage[];
   users?: IChatUser[];
   currentUserId?: string;
-  onSendMessage?: (message: {
-    text: string;
-    mentions: Array<{
-      id: string;
-      name: string;
-      start: number;
-      length: number;
-    }>;
-    replyTo?: {
-      id: string;
-      text: string;
-      senderName: string;
-    };
-  }) => void;
+  onSendMessage?: (message: ISendMessageData) => void;
   onBack?: () => void;
   onCall?: () => void;
   onVideoCall?: () => void;
   onSearch?: () => void;
   onInfo?: () => void;
 }
-interface IHeaderProps {
-  selectedChat?: {
-    id: string | number;
-    name: string;
-    photo?: string;
-    type: "user" | "group";
-    isOnline?: boolean;
-    lastSeen?: string;
-    memberCount?: number;
-  };
+
+export interface IHeaderProps {
+  selectedChat?: ISelectedChat;
   onBack?: () => void;
   onCall?: () => void;
   onVideoCall?: () => void;
   onSearch?: () => void;
   onInfo?: () => void;
+}
+
+export interface IMessageInputProps {
+  placeholder?: string;
+  onSendMessage: (messageData: ISendMessageData) => void;
+  onTyping?: () => void;
+  disabled?: boolean;
+  replyTo?: IMessageReply;
+  onCancelReply?: () => void;
+  users?: Array<{
+    id: string;
+    name: string;
+    photo?: string;
+    type?: "user" | "group";
+  }>;
+  isGroup?: boolean;
+}
+
+export interface IMessageProps {
+  id: string;
+  text: string;
+  timestamp: string;
+  isOwn: boolean;
+  isGroup: boolean;
+  senderName: string;
+  senderPhoto?: string;
+  status: "sent" | "delivered" | "seen" | "failed" | "sending" | "queued";
+  attachment?: IMessageAttachment;
+  mentions?: IMessageMention[];
+  replyTo?: IMessageReply;
+  onReply?: () => void;
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { IChatItem } from "../../../interfaces/chat";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -9,9 +10,9 @@ import Chats from "./container/chats";
 import RecentList from "./container/recent-list";
 
 const Index = () => {
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<IChatItem | null>(null);
 
-  const handleUserSelect = (user: any) => {
+  const handleUserSelect = (user: IChatItem) => {
     setSelectedUser(user);
   };
 

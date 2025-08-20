@@ -1,5 +1,4 @@
-import { IMessage } from "../../interfaces/message";
-import { IRecentUser } from "../../interfaces/user";
+import { IChatItem, IMessage } from "../../interfaces/chat";
 
 export type TChatPermissions = {
   id: string;
@@ -11,7 +10,7 @@ export type TChatPermissions = {
 };
 
 export type TChatState = {
-  recentUsers: IRecentUser[];
+  recentUsers: IChatItem[];
   permissions: TChatPermissions[];
   searchQuery: string;
   chats: IMessage[];

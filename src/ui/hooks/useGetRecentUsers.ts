@@ -1,13 +1,12 @@
 import { useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { IRecentUser } from "../../interfaces/user";
+import { IChatItem, IChatListApiResponse } from "../../interfaces/chat";
 import { useAppSelector } from "../../redux/selector";
 import { AppDispatch } from "../../redux/store";
 import { setPermissions, setRecentUsers } from "../../redux/store/actions";
 import { useGetRecentUsersMutation } from "../../redux/store/mutations";
 import { TChatPermissions } from "../../redux/store/state.interface";
-import { TResponse } from "../types/api-response.type";
 
 export const useGetRecentUsers = (): {
   handleRecentUsers: () => Promise<void>;
@@ -27,11 +26,11 @@ export const useGetRecentUsers = (): {
 
     try {
       const response = await getRecentUsers("").unwrap();
-      const { code, result } = response as TResponse<IRecentUser>;
+      const { code, result } = response as IChatListApiResponse;
 
       if (code === 200 && Array.isArray(result)) {
         const permissions: TChatPermissions[] = result.map(
-          (item: IRecentUser) => ({
+          (item: IChatItem) => ({
             id: item.id,
             isEditGroupSettings: item.isEditGroupSettings,
             isSendMessages: item.isSendMessages,
@@ -42,7 +41,7 @@ export const useGetRecentUsers = (): {
         );
 
         dispatch(setPermissions(permissions));
-        dispatch(setRecentUsers(result as IRecentUser[]));
+        dispatch(setRecentUsers(result));
       }
     } catch (error) {
       hasFetchedRef.current = false;

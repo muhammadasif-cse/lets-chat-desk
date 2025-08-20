@@ -1,6 +1,7 @@
 /** @format */
 
 import EAPI_METHODS from "../../enums/api-methods";
+import { IGetChatsRequest } from "../../interfaces/chat";
 import APIHeader from "../APIHeader";
 
 const apiTag = APIHeader.enhanceEndpoints({
@@ -10,7 +11,7 @@ const apiTag = APIHeader.enhanceEndpoints({
 export const ChatMutations = apiTag.injectEndpoints({
   endpoints: (builder) => ({
     getChats: builder.mutation({
-      query: (body: IGetChats) => ({
+      query: (body: IGetChatsRequest) => ({
         url: `/chatservice/chats/GetChats`,
         method: "POST",
         body: body,

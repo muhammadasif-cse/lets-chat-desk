@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { IMessage } from "../../interfaces/message";
-import { IRecentUser } from "../../interfaces/user";
+import { IChatItem, IMessage } from "../../interfaces/chat";
 import { RootState } from "../store";
 import initialState from "./state";
 import { TChatPermissions } from "./state.interface";
@@ -9,7 +8,7 @@ export const chatSlice = createSlice({
   name: "chat",
   initialState,
   reducers: {
-    setRecentUsers: (state, action: PayloadAction<IRecentUser[]>) => {
+    setRecentUsers: (state, action: PayloadAction<IChatItem[]>) => {
       state.recentUsers = action.payload;
     },
     setPermissions: (state, action: PayloadAction<TChatPermissions[]>) => {
