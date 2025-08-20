@@ -6,6 +6,7 @@ import { renderMessage } from "../utils/render-message";
 import { renderReply } from "../utils/render-reply";
 import { formatTime } from "../utils/time-formatting";
 import MessageOption from "./message-option";
+import MessageReaction from "./message-reaction";
 
 const Message: React.FC<IMessageProps> = ({
   id,
@@ -21,6 +22,7 @@ const Message: React.FC<IMessageProps> = ({
   onReply,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isOpenReaction, setIsOpenReaction] = useState(false);
 
   return (
     <div
@@ -121,6 +123,17 @@ const Message: React.FC<IMessageProps> = ({
               onReply={onReply}
               onDropdownChange={setIsDropdownOpen}
             />
+          </div>
+          <div
+            className={`absolute -top-1 right-0  ${
+              isOwn ? "left-0" : "-right-10"
+            } ${
+              isOpenReaction
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100"
+            } transition-opacity duration-200 z-10`}
+          >
+            <MessageReaction onReactionToggle={setIsOpenReaction} />
           </div>
         </div>
       </div>
