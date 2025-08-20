@@ -16,34 +16,6 @@ export interface IUserInfo {
   hasDeleteRequest?: boolean;
 }
 
-export interface IRecentUsers {
-  id: number;
-  groupId?: string | null;
-  groupName?: string | null;
-  name: string;
-  photo?: string | null;
-  message: string;
-  lastMessageId?: string;
-  lastMessage?: string;
-  lastMessageDate?: string;
-  tags?: { userName: string; userId: number }[];
-  attachments?: { filePath?: string | null; fileName: string }[];
-  date?: string;
-  isSeen?: boolean;
-  userId?: number;
-  toUserId?: number;
-  type: "user" | "group";
-  isTyping?: boolean;
-  isOnline?: boolean;
-  unreadCount?: number;
-  isApprovalNeeded?: boolean;
-  isAdmin?: boolean;
-  isEditGroupSettings?: boolean;
-  isSendMessages?: boolean;
-  isAddMembers?: boolean;
-  hasDeleteRequest?: boolean;
-}
-
 export type IMemberPermission = {
   userId: number;
   name: string;
@@ -57,6 +29,23 @@ export interface IUserItemProps {
   selected?: boolean;
   onToggle?: () => void;
 }
+export interface IRecentUser {
+  id: string;
+  name: string;
+  photo: string;
+  description: string | null;
+  type: "user" | "group";
+  lastMessage: string;
+  lastMessageId: string;
+  lastMessageDate: string;
+  unreadCount: number;
+  isAdmin: boolean;
+  isEditGroupSettings: boolean;
+  isSendMessages: boolean;
+  isAddMembers: boolean;
+  hasDeleteRequest: boolean;
+}
+
 export type TUser = {
   id: number;
   isActive: boolean;

@@ -10,12 +10,7 @@ const apiTag = APIHeader.enhanceEndpoints({
 export const ChatMutations = apiTag.injectEndpoints({
   endpoints: (builder) => ({
     getChats: builder.mutation({
-      query: (body: {
-        userId: number;
-        toUserId: number;
-        groupId: string;
-        type: string;
-      }) => ({
+      query: (body: IGetChats) => ({
         url: `/chatservice/chats/GetChats`,
         method: "POST",
         body: body,

@@ -8,7 +8,6 @@ import { setPermissions, setRecentUsers } from "../../redux/store/actions";
 import { useGetRecentUsersMutation } from "../../redux/store/mutations";
 import { TChatPermissions } from "../../redux/store/state.interface";
 import { TResponse } from "../types/api-response.type";
-import { TRecentUsers } from "../types/chat.type";
 
 export const useGetRecentUsers = (): {
   handleRecentUsers: () => Promise<void>;
@@ -28,12 +27,11 @@ export const useGetRecentUsers = (): {
 
     try {
       const response = await getRecentUsers("").unwrap();
-      const { code, result } = response as TResponse<TRecentUsers>;
-      console.log("🚀 ~ useGetRecentUsers ~ data:", result);
+      const { code, result } = response as TResponse<IRecentUsers>;
 
       if (code === 200 && Array.isArray(result)) {
         const permissions: TChatPermissions[] = result.map(
-          (item: TRecentUsers) => ({
+          (item: IRecentUsers) => ({
             id: item.id,
             isEditGroupSettings: item.isEditGroupSettings,
             isSendMessages: item.isSendMessages,
@@ -43,37 +41,8 @@ export const useGetRecentUsers = (): {
           })
         );
 
-        const chatUsers: IRecentUsers[] = result.map((item: TRecentUsers) => ({
-          id: parseInt(item.id) || 0,
-          name: item.name,
-          message: item.lastMessage,
-          photo: item.photo,
-          lastMessageDate: item.lastMessageDate,
-          lastMessageId: item.lastMessageId,
-          unreadCount: item.unreadCount,
-          type: item.type,
-          groupId: item.type === "group" ? item.id : null,
-          groupName: item.type === "group" ? item.name : null,
-          lastMessage: item.lastMessage,
-          description: item.description,
-          tags: [],
-          attachments: [],
-          date: item.lastMessageDate,
-          userId: item.type === "user" ? parseInt(item.id) : undefined,
-          toUserId: undefined,
-          isSeen: item.unreadCount === 0,
-          isTyping: false,
-          isOnline: false,
-          isApprovalNeeded: false,
-          isAdmin: item.isAdmin,
-          isEditGroupSettings: item.isEditGroupSettings,
-          isSendMessages: item.isSendMessages,
-          isAddMembers: item.isAddMembers,
-          hasDeleteRequest: item.hasDeleteRequest,
-        }));
-
         dispatch(setPermissions(permissions));
-        dispatch(setRecentUsers(chatUsers));
+        dispatch(setRecentUsers(result as IRecentUsers[]));
       }
     } catch (error) {
       hasFetchedRef.current = false;

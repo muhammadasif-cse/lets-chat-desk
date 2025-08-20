@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { IRecentUsers } from "../../interfaces/user";
+import { IRecentUser } from "../../interfaces/user";
 import { useAppSelector } from "../../redux/selector";
 
-export const useFilteredChats = (): IRecentUsers[] => {
+export const useFilteredChats = (): IRecentUser[] => {
   const { recentUsers, searchQuery } = useAppSelector((state) => state.chat);
   const filteredChats = useMemo(() => {
     let chats = [...recentUsers];
@@ -11,14 +11,11 @@ export const useFilteredChats = (): IRecentUsers[] => {
       chats = chats.filter(
         (chat) =>
           chat.name?.toLowerCase().includes(query) ||
-          (chat.message && chat.message.toLowerCase().includes(query))
+          (chat.lastMessage && chat.lastMessage.toLowerCase().includes(query))
       );
     }
 
-    const unseen = chats.filter((chat) => !chat.isSeen);
-    const seen = chats.filter((chat) => chat.isSeen);
-
-    return [...unseen, ...seen];
+    return chats;
   }, [recentUsers, searchQuery]);
   return filteredChats;
 };

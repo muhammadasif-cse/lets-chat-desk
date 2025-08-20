@@ -1,4 +1,5 @@
-import { IRecentUsers } from "../../interfaces/user";
+import { IMessage } from "../../interfaces/message";
+import { IRecentUser } from "../../interfaces/user";
 
 export type TChatPermissions = {
   id: string;
@@ -10,7 +11,8 @@ export type TChatPermissions = {
 };
 
 export type TChatState = {
-  recentUsers: IRecentUsers[];
+  recentUsers: IRecentUser[];
   permissions: TChatPermissions[];
   searchQuery: string;
+  chats: IMessage[];
 };
