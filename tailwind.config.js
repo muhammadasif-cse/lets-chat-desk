@@ -52,6 +52,7 @@ export default {
         dark3: "#202C33",
         gray2: "#AEBAC1",
         teal: "#0A332C",
+        teal2: "#005c4b",
         dark4: "#262E34",
         danger: "#ef4444",
         chart: {
