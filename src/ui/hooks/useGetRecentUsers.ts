@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { IRecentUsers } from "../../interfaces/user";
+import { IRecentUser } from "../../interfaces/user";
 import { useAppSelector } from "../../redux/selector";
 import { AppDispatch } from "../../redux/store";
 import { setPermissions, setRecentUsers } from "../../redux/store/actions";
@@ -27,11 +27,11 @@ export const useGetRecentUsers = (): {
 
     try {
       const response = await getRecentUsers("").unwrap();
-      const { code, result } = response as TResponse<IRecentUsers>;
+      const { code, result } = response as TResponse<IRecentUser>;
 
       if (code === 200 && Array.isArray(result)) {
         const permissions: TChatPermissions[] = result.map(
-          (item: IRecentUsers) => ({
+          (item: IRecentUser) => ({
             id: item.id,
             isEditGroupSettings: item.isEditGroupSettings,
             isSendMessages: item.isSendMessages,
@@ -42,7 +42,7 @@ export const useGetRecentUsers = (): {
         );
 
         dispatch(setPermissions(permissions));
-        dispatch(setRecentUsers(result as IRecentUsers[]));
+        dispatch(setRecentUsers(result as IRecentUser[]));
       }
     } catch (error) {
       hasFetchedRef.current = false;
