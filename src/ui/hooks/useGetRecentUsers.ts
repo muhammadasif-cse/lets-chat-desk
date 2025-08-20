@@ -1,39 +1,39 @@
 import { useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { IRecentChatUsers } from "../../interfaces/user";
+import { IRecentUsers } from "../../interfaces/user";
 import { useAppSelector } from "../../redux/selector";
 import { AppDispatch } from "../../redux/store";
-import { setPermission, setRecentChatUsers } from "../../redux/store/actions";
-import { useGetRecentChatUsersMutation } from "../../redux/store/mutations";
-import { TChatPermissions } from "../../redux/store/state";
+import { setPermissions, setRecentUsers } from "../../redux/store/actions";
+import { useGetRecentUsersMutation } from "../../redux/store/mutations";
+import { TChatPermissions } from "../../redux/store/state.interface";
 import { TResponse } from "../types/api-response.type";
-import { TRecentChat } from "../types/chat-api-response.type";
+import { TRecentUsers } from "../types/chat.type";
 
 export const useGetRecentUsers = (): {
-  handleRecentChatUsers: () => Promise<void>;
+  handleRecentUsers: () => Promise<void>;
   isLoading: boolean;
 } => {
   const dispatch = useDispatch<AppDispatch>();
-  const [getRecentChatUsers, { isLoading }] = useGetRecentChatUsersMutation();
-  const { recentChatUsers } = useAppSelector((state) => state.chat);
+  const [getRecentUsers, { isLoading }] = useGetRecentUsersMutation();
+  const { recentUsers } = useAppSelector((state) => state.chat);
   const hasFetchedRef = useRef(false);
 
-  const handleRecentChatUsers = useCallback(async () => {
-    if (hasFetchedRef.current || isLoading || recentChatUsers.length > 0) {
+  const handleRecentUsers = useCallback(async () => {
+    if (hasFetchedRef.current || isLoading || recentUsers.length > 0) {
       return;
     }
 
     hasFetchedRef.current = true;
 
     try {
-      const response = await getRecentChatUsers("").unwrap();
-      const { code, result } = response as TResponse<TRecentChat>;
+      const response = await getRecentUsers("").unwrap();
+      const { code, result } = response as TResponse<TRecentUsers>;
       console.log("🚀 ~ useGetRecentUsers ~ data:", result);
 
       if (code === 200 && Array.isArray(result)) {
         const permissions: TChatPermissions[] = result.map(
-          (item: TRecentChat) => ({
+          (item: TRecentUsers) => ({
             id: item.id,
             isEditGroupSettings: item.isEditGroupSettings,
             isSendMessages: item.isSendMessages,
@@ -43,39 +43,37 @@ export const useGetRecentUsers = (): {
           })
         );
 
-        const chatUsers: IRecentChatUsers[] = result.map(
-          (item: TRecentChat) => ({
-            id: parseInt(item.id) || 0,
-            name: item.name,
-            message: item.lastMessage,
-            photo: item.photo,
-            lastMessageDate: item.lastMessageDate,
-            lastMessageId: item.lastMessageId,
-            unreadCount: item.unreadCount,
-            type: item.type,
-            groupId: item.type === "group" ? item.id : null,
-            groupName: item.type === "group" ? item.name : null,
-            lastMessage: item.lastMessage,
-            description: item.description,
-            tags: [],
-            attachments: [],
-            date: item.lastMessageDate,
-            userId: item.type === "user" ? parseInt(item.id) : undefined,
-            toUserId: undefined,
-            isSeen: item.unreadCount === 0,
-            isTyping: false,
-            isOnline: false,
-            isApprovalNeeded: false,
-            isAdmin: item.isAdmin,
-            isEditGroupSettings: item.isEditGroupSettings,
-            isSendMessages: item.isSendMessages,
-            isAddMembers: item.isAddMembers,
-            hasDeleteRequest: item.hasDeleteRequest,
-          })
-        );
+        const chatUsers: IRecentUsers[] = result.map((item: TRecentUsers) => ({
+          id: parseInt(item.id) || 0,
+          name: item.name,
+          message: item.lastMessage,
+          photo: item.photo,
+          lastMessageDate: item.lastMessageDate,
+          lastMessageId: item.lastMessageId,
+          unreadCount: item.unreadCount,
+          type: item.type,
+          groupId: item.type === "group" ? item.id : null,
+          groupName: item.type === "group" ? item.name : null,
+          lastMessage: item.lastMessage,
+          description: item.description,
+          tags: [],
+          attachments: [],
+          date: item.lastMessageDate,
+          userId: item.type === "user" ? parseInt(item.id) : undefined,
+          toUserId: undefined,
+          isSeen: item.unreadCount === 0,
+          isTyping: false,
+          isOnline: false,
+          isApprovalNeeded: false,
+          isAdmin: item.isAdmin,
+          isEditGroupSettings: item.isEditGroupSettings,
+          isSendMessages: item.isSendMessages,
+          isAddMembers: item.isAddMembers,
+          hasDeleteRequest: item.hasDeleteRequest,
+        }));
 
-        dispatch(setPermission(permissions));
-        dispatch(setRecentChatUsers(chatUsers));
+        dispatch(setPermissions(permissions));
+        dispatch(setRecentUsers(chatUsers));
       }
     } catch (error) {
       hasFetchedRef.current = false;
@@ -85,7 +83,7 @@ export const useGetRecentUsers = (): {
           "Something went wrong"
       );
     }
-  }, [dispatch, isLoading, recentChatUsers.length]);
+  }, [dispatch, isLoading, recentUsers.length]);
 
-  return { handleRecentChatUsers, isLoading };
+  return { handleRecentUsers, isLoading };
 };

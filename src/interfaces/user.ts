@@ -16,7 +16,7 @@ export interface IUserInfo {
   hasDeleteRequest?: boolean;
 }
 
-export interface IRecentChatUsers {
+export interface IRecentUsers {
   id: number;
   groupId?: string | null;
   groupName?: string | null;

@@ -4,12 +4,14 @@
  * @format
  */
 
-import { userCookies } from "../ui/utils/cookies";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { TResponse } from "../ui/types/api-response.type";
-import { fetchBaseQuery, createApi } from "@reduxjs/toolkit/query/react";
+import { userCookies } from "../ui/utils/cookies";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${import.meta.env.VITE_API_HTTP}://${import.meta.env.VITE_API_HOST}`,
+  baseUrl: `${import.meta.env.VITE_API_HTTP}://${
+    import.meta.env.VITE_API_HOST
+  }`,
 
   prepareHeaders: (headers) => {
     const auth = userCookies.getUserData();
@@ -18,9 +20,12 @@ const baseQuery = fetchBaseQuery({
     if (auth?.token) {
       headers.set("authorization", `Bearer ${auth?.token}`);
     } else {
-      headers.set("authorization", import.meta.env.VITE_API_SECRETE_TOKEN || "");
+      headers.set(
+        "authorization",
+        import.meta.env.VITE_API_SECRETE_TOKEN || ""
+      );
     }
-    
+
     headers.set("Content-Type", "application/json");
     return headers;
   },
@@ -69,7 +74,7 @@ const baseQueryWithReactAuth = async (
   }
 
   if (result?.error?.status === 401) {
-    const response_data = result?.error?.data as TResponse;
+    const response_data = result?.error?.data as TResponse<any>;
     return formatErrorResponse(
       result?.error?.status,
       response_data?.message,

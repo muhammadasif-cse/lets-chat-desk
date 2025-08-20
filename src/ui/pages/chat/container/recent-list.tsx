@@ -10,16 +10,16 @@ interface RecentListProps {
 }
 
 const RecentList = ({ onUserSelect, selectedUserId }: RecentListProps) => {
-  const { handleRecentChatUsers, isLoading } = useGetRecentUsers();
+  const { handleRecentUsers, isLoading } = useGetRecentUsers();
   const filteredChats = useFilteredChats();
   const hasCalledRef = useRef(false);
 
   useEffect(() => {
     if (!hasCalledRef.current && !isLoading) {
       hasCalledRef.current = true;
-      handleRecentChatUsers();
+      handleRecentUsers();
     }
-  }, [handleRecentChatUsers, isLoading]);
+  }, [handleRecentUsers, isLoading]);
 
   const chatsToShow = filteredChats.length > 0 ? filteredChats : [];
 
