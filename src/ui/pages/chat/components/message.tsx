@@ -41,7 +41,12 @@ const Message: React.FC<IMessageProps> = ({
               />
             ) : (
               <span className="text-gray text-xs font-medium">
-                {senderName?.charAt(0).toUpperCase()}
+                {senderName
+                  ?.split(/(?=[A-Z])|\s+/)
+                  .filter(Boolean)
+                  .map((word) => word[0]?.toUpperCase())
+                  .slice(0, 2)
+                  .join("")}
               </span>
             )}
           </div>
@@ -125,9 +130,7 @@ const Message: React.FC<IMessageProps> = ({
             />
           </div>
           <div
-            className={`absolute -top-1 right-0  ${
-              isOwn ? "left-0" : "-right-10"
-            } ${
+            className={`absolute -top-1 ${isOwn ? "-left-10" : "-right-10"} ${
               isOpenReaction
                 ? "opacity-100"
                 : "opacity-0 group-hover:opacity-100"
