@@ -43,10 +43,12 @@ export const renderMessage = ({
 
   return mentionElements.map((element, index) => {
     if (typeof element === "string") {
+      const formattedHtml = formatMessage(element);
       return (
-        <span
+        <div 
           key={index}
-          dangerouslySetInnerHTML={{ __html: formatMessage(element) }}
+          className="formatted-message"
+          dangerouslySetInnerHTML={{ __html: formattedHtml }}
         />
       );
     }

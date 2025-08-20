@@ -28,12 +28,12 @@ const Message: React.FC<IMessageProps> = ({
       className={`flex mb-4 group ${isOwn ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`flex max-w-[55%] ${
+        className={`flex ${
           isOwn ? "flex-row-reverse" : "flex-row"
         }`}
       >
         {isGroup && !isOwn && (
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-dark3 flex items-center justify-center mr-2 mt-auto">
+          <div className="w-8 h-8 shrink-0 rounded-full overflow-hidden bg-dark3 flex items-center justify-center mr-2 mt-auto">
             {senderPhoto ? (
               <img
                 src={senderPhoto}
@@ -47,10 +47,17 @@ const Message: React.FC<IMessageProps> = ({
             )}
           </div>
         )}
-        <div className="relative">
+        <div
+          data-message-id={id}
+          data-message-type={isGroup ? "group" : "user"}
+          data-message-sender={senderName}
+          className="relative max-w-[40vw]"
+        >
           <div
             className={`rounded-2xl px-3 py-2 max-w-full relative ${
-              isOwn ? "bg-teal2 text-light rounded-br-sm rounded-tl-sm" : "bg-dark3 text-light rounded-bl-sm rounded-tr-sm"
+              isOwn
+                ? "bg-teal2 text-light rounded-br-sm rounded-tl-sm"
+                : "bg-dark3 text-light rounded-bl-sm rounded-tr-sm"
             } shadow-sm`}
           >
             {isGroup && !isOwn && (
@@ -58,33 +65,37 @@ const Message: React.FC<IMessageProps> = ({
                 {senderName}
               </div>
             )}
-            {renderReply({ 
-              replyTo: replyTo ? {
-                id: replyTo.messageId,
-                text: replyTo.text,
-                senderName: replyTo.senderName
-              } : undefined, 
-              isOwn 
+            {renderReply({
+              replyTo: replyTo
+                ? {
+                    id: replyTo.messageId,
+                    text: replyTo.text,
+                    senderName: replyTo.senderName,
+                  }
+                : undefined,
+              isOwn,
             })}
-            {attachment ? renderAttachment({ 
-              attachment: {
-                type: attachment.type,
-                url: attachment.url || attachment.filePath || "",
-                name: attachment.fileName,
-                size: attachment.size,
-                duration: attachment.duration
-              }
-            }) : null}
+            {attachment
+              ? renderAttachment({
+                  attachment: {
+                    type: attachment.type,
+                    url: attachment.url || attachment.filePath || "",
+                    name: attachment.fileName,
+                    size: attachment.size,
+                    duration: attachment.duration,
+                  },
+                })
+              : null}
             {text && (
               <div className="text-light text-sm leading-5 break-words mb-1">
-                {renderMessage({ 
-                  text, 
-                  mentions: mentions.map(mention => ({
+                {renderMessage({
+                  text,
+                  mentions: mentions.map((mention) => ({
                     start: mention.startIndex,
                     length: mention.endIndex - mention.startIndex,
-                    name: mention.name
-                  })), 
-                  isOwn 
+                    name: mention.name,
+                  })),
+                  isOwn,
                 })}
               </div>
             )}
