@@ -4,7 +4,6 @@ import { Button } from "../../../components/ui/button";
 
 import {
   IMessageInputProps,
-  IMessageMention,
 } from "../../../../interfaces/chat";
 import inputReplyRender from "../utils/input-reply-render";
 import InputEmoji from "./input-emoji";
@@ -81,19 +80,8 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
   const handleSend = () => {
     if (message.trim()) {
-      const transformedMentions: IMessageMention[] = mentions.map(
-        (mention) => ({
-          id: mention.id,
-          name: mention.name,
-          type: "user" as const,
-          startIndex: mention.start,
-          endIndex: mention.start + mention.length,
-        })
-      );
-
       onSendMessage({
         text: message.trim(),
-        mentions: transformedMentions,
         replyTo: replyTo || undefined,
       });
       setMessage("");

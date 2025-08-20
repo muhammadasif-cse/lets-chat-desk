@@ -106,15 +106,9 @@ const Header = ({
           <div className="w-10 h-10 border border-dark rounded-full overflow-hidden bg-dark3 flex items-center justify-center">
             {!imageError && selectedChat.photo ? (
               <img
-                src={
-                  isGroup
-                    ? `${import.meta.env.VITE_API_ASSETS_URL}/groupimages/${
-                        selectedChat.photo
-                      }`
-                    : `${import.meta.env.VITE_API_ASSETS_URL}/photos/${
-                        selectedChat.photo
-                      }`
-                }
+                src={`${import.meta.env.VITE_API_ASSETS_URL}/${
+                  isGroup ? "groupimages" : "photos"
+                }/${selectedChat.photo}`}
                 alt={selectedChat.name}
                 className="w-full h-full object-cover"
                 onError={handleImageError}

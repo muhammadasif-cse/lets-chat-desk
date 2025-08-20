@@ -104,7 +104,6 @@ export interface IChatUser {
 
 export interface ISendMessageData {
   text: string;
-  mentions: IMessageMention[];
   replyTo?: IMessageReply;
   attachments?: IMessageAttachment[];
 }
@@ -186,7 +185,6 @@ export interface IMessageProps {
   senderPhoto?: string;
   status: "sent" | "delivered" | "seen" | "failed" | "sending" | "queued";
   attachment?: IMessageAttachment;
-  mentions?: IMessageMention[];
   replyTo?: IMessageReply;
   onReply?: () => void;
 }

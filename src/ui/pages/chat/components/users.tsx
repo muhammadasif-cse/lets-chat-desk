@@ -6,12 +6,7 @@ import { IUsersProps } from "../../../types/user.type";
 import { formatTime } from "../utils/time-formatting";
 import MessagePreview from "./message-preview";
 
-const Users = ({
-  data,
-  isLast = false,
-  isSelected = false,
-  onUserSelect,
-}: IUsersProps) => {
+const Users = ({ data, isSelected = false, onUserSelect }: IUsersProps) => {
   const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
@@ -29,7 +24,7 @@ const Users = ({
 
   // message status icons
   const renderMessageStatus = () => {
-    if (data.isSeen) {
+    if ((data as any).isSeen) {
       return <Check2Icon className="text-blue" />;
     } else if (data.lastMessage) {
       return <Check2Icon className="text-gray" />;
@@ -50,16 +45,9 @@ const Users = ({
           <div className="w-12 h-12 rounded-full overflow-hidden bg-dark3 border border-dark flex items-center justify-center">
             {!imageError && data.photo ? (
               <img
-                src={
-                  isGroup
-                    ? `${import.meta.env.VITE_API_ASSETS_URL}/groupimages/${
-                        data.photo
-                      }`
-                    : `${import.meta.env.VITE_API_ASSETS_URL}/photos/${
-                        data.photo
-                      }`
-                }
-                alt={data.name ?? "profile"}
+                src={`${import.meta.env.VITE_API_ASSETS_URL}/${
+                  isGroup ? "group-images" : "photos"
+                }/${data.photo}`}
                 className="w-full h-full object-cover"
                 onError={handleImageError}
               />
@@ -71,7 +59,7 @@ const Users = ({
           </div>
 
           {/* online indicator for users */}
-          {!isGroup && data.isOnline && (
+          {!isGroup && (data as any).isOnline && (
             <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green2 rounded-full border-2 border-dark"></div>
           )}
         </div>
@@ -84,7 +72,7 @@ const Users = ({
                   hasUnreadMessages ? "text-light" : "text-light"
                 }`}
               >
-                {data.name || data.groupName}
+                {data.name}
               </h3>
 
               {/* admin badge for groups */}
@@ -102,14 +90,11 @@ const Users = ({
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
-              {/* message status for sent messages */}
               {!isGroup && renderMessageStatus()}
-
-              {/* message preview with typing indicator */}
               <MessagePreview
-                message={data.message}
+                message={data.lastMessage}
                 lastMessage={data.lastMessage}
-                isTyping={data.isTyping}
+                isTyping={(data as any).isTyping}
                 hasUnreadMessages={hasUnreadMessages}
                 isGroup={isGroup}
               />

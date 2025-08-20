@@ -182,10 +182,9 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                   isOwn={message.userId.toString() === currentUserId}
                   isGroup={selectedChat.type === "group"}
                   senderName={message.senderName}
-                  senderPhoto={undefined}
+                  senderPhoto={selectedChat.photo}
                   status={message.status}
                   attachment={message.attachments?.[0]}
-                  mentions={[]}
                   replyTo={
                     message.parentMessageId
                       ? {

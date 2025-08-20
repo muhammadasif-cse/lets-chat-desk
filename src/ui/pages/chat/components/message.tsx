@@ -17,7 +17,6 @@ const Message: React.FC<IMessageProps> = ({
   senderPhoto,
   status = "sent",
   attachment,
-  mentions = [],
   replyTo,
   onReply,
 }) => {
@@ -27,16 +26,14 @@ const Message: React.FC<IMessageProps> = ({
     <div
       className={`flex mb-4 group ${isOwn ? "justify-end" : "justify-start"}`}
     >
-      <div
-        className={`flex ${
-          isOwn ? "flex-row-reverse" : "flex-row"
-        }`}
-      >
+      <div className={`flex ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
         {isGroup && !isOwn && (
           <div className="w-8 h-8 shrink-0 rounded-full overflow-hidden bg-dark3 flex items-center justify-center mr-2 mt-auto">
             {senderPhoto ? (
               <img
-                src={senderPhoto}
+                src={`${import.meta.env.VITE_API_ASSETS_URL}/${
+                  isGroup ? "groupimages" : "photos"
+                }/${senderPhoto}`}
                 alt={senderName}
                 className="w-full h-full object-cover"
               />
@@ -86,29 +83,26 @@ const Message: React.FC<IMessageProps> = ({
                   },
                 })
               : null}
-            {text && (
-              <div className="text-light text-sm leading-5 break-words mb-1">
-                {renderMessage({
-                  text,
-                  mentions: mentions.map((mention) => ({
-                    start: mention.startIndex,
-                    length: mention.endIndex - mention.startIndex,
-                    name: mention.name,
-                  })),
-                  isOwn,
-                })}
-              </div>
-            )}
-            <div className="flex items-center justify-end space-x-1 mt-1">
-              <span
-                className={`text-xs ${
-                  isOwn ? "text-gray-300" : "text-gray-400"
-                }`}
-              >
-                {formatTime(timestamp)}
-              </span>
-              <div className="w-4 h-4 flex items-center justify-center">
-                {renderMessageStatus({ isOwn, status })}
+            <div className="flex items-end gap-3">
+              {text && (
+                <div className="text-light text-sm leading-5 break-words">
+                  {renderMessage({
+                    text,
+                    isOwn,
+                  })}
+                </div>
+              )}
+              <div className="flex items-center justify-end space-x-1">
+                <span
+                  className={`text-xs ${
+                    isOwn ? "text-gray-300" : "text-gray-400"
+                  }`}
+                >
+                  {formatTime(timestamp)}
+                </span>
+                <div className="w-4 h-4 flex items-center justify-center">
+                  {renderMessageStatus({ isOwn, status })}
+                </div>
               </div>
             </div>
           </div>
