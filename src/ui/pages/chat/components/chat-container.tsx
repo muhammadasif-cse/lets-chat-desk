@@ -103,14 +103,12 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     }
   }, [messages, isLoadingOlder]);
 
-  // Auto scroll to bottom for new messages
   useEffect(() => {
     if (shouldScrollToBottom && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, shouldScrollToBottom]);
 
-  // Update auto-scroll behavior based on user position
   useEffect(() => {
     setShouldScrollToBottom(bottomInView);
   }, [bottomInView]);
@@ -157,15 +155,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
 
   if (!selectedChat) {
     return (
-      <div
-        className="flex-1 bg-foreground flex items-center justify-center"
-        style={{
-          backgroundImage: `url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
+      <div className="flex-1 bg-foreground flex items-center justify-center">
         <div className="text-center bg-foreground/90 backdrop-blur-sm rounded-lg p-8">
           <div className="w-64 h-64 bg-foreground rounded-full flex items-center justify-center mb-8 mx-auto">
             <svg
@@ -214,12 +204,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
         <div
           ref={messagesContainerRef}
           className="absolute inset-0 overflow-y-auto px-4 py-4 chat-scrollbar smooth-scroll"
-          style={{
-            backgroundImage: `url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundAttachment: "fixed",
-          }}
         >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
@@ -284,7 +268,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
             <Button
               onClick={scrollToBottom}
               className="cursor-pointer  shrink-0 bg-dark3/90 hover:bg-dark3 text-gray hover:text-light rounded-full shadow-lg backdrop-blur-sm transition-all"
-              size="sm"
+              size="icon"
             >
               <ChevronDown className="size-5" />
             </Button>

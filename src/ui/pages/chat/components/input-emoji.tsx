@@ -17,7 +17,7 @@ export default function InputEmoji({
 
   return (
     <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="sm"

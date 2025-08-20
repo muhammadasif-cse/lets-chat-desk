@@ -35,7 +35,7 @@ const sampleUsers: IChatUser[] = [
 const Chats = ({ selectedUser }: ChatsProps) => {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [selectedChat, setSelectedChat] = useState<ISelectedChat | null>(null);
-
+  console.log("selectedUser", selectedUser);
   // Generate sample messages based on selected user
   useEffect(() => {
     if (selectedUser) {

@@ -25,7 +25,7 @@ export default function messageOption({
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
         <button
           className={`h-8 w-8 bg-transparent group-hover:bg-[radial-gradient(circle,_rgba(0,0,0,0.3)_0%,_transparent_80%)]
              group-hover:rounded-tr-xl transition-all duration-500 text-light p-1 -ml-0.5 -mr-2 -mt-1 ${

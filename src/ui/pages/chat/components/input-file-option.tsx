@@ -13,7 +13,7 @@ export default function InputFileOption({
 }) {
   return (
     <Popover>
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
