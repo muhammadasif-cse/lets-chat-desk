@@ -204,7 +204,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     previousMessagesLength.current = messages.length;
   }, [messages.length, scrollToBottom]);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       if (scrollTimeout.current) {
