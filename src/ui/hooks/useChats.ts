@@ -60,14 +60,20 @@ export const useChat = () => {
           if (params.callCount === 0) {
             dispatch(setChats(messages));
             dispatch(setCurrentCallCount(response.result.count));
-            dispatch(setHasMorePrevious(messages.length >= CHAT_CONFIG.PAGE_SIZE));
+            dispatch(
+              setHasMorePrevious(messages.length >= CHAT_CONFIG.PAGE_SIZE)
+            );
             dispatch(setHasMoreNext(response.result.count > 0));
           } else if (params.callCount > currentCallCount) {
             dispatch(appendPreviousChats(messages));
-            dispatch(setHasMorePrevious(messages.length >= CHAT_CONFIG.PAGE_SIZE));
+            dispatch(
+              setHasMorePrevious(messages.length >= CHAT_CONFIG.PAGE_SIZE)
+            );
           } else {
             dispatch(appendNextChats(messages));
-            dispatch(setHasMoreNext(messages.length > 0 && params.callCount > 0));
+            dispatch(
+              setHasMoreNext(messages.length > 0 && params.callCount > 0)
+            );
           }
 
           dispatch(addLoadedCallCount(params.callCount));
@@ -80,8 +86,8 @@ export const useChat = () => {
           return false;
         }
 
-        const errorMessage = 
-          (error as any)?.data?.message || 
+        const errorMessage =
+          (error as any)?.data?.message ||
           (error instanceof Error ? error.message : "Failed to load messages");
         dispatch(setError(errorMessage));
         toast.error(errorMessage);
@@ -235,5 +241,4 @@ export const useChat = () => {
   };
 };
 
-export { useChat as useGetChats };
 export default useChat;

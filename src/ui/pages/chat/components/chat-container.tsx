@@ -42,7 +42,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   const [isLoadingNext, setIsLoadingNext] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
-  // Simple refs for basic functionality
   const selectedChatIdRef = useRef<string | undefined>(selectedChat?.id);
   const isLoadingRef = useRef<boolean>(false);
   const hasUserScrolledRef = useRef<boolean>(false);
@@ -59,7 +58,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     triggerOnce: false,
   });
 
-  // Reset state on chat change
   useEffect(() => {
     if (selectedChatIdRef.current !== selectedChat?.id) {
       selectedChatIdRef.current = selectedChat?.id;
@@ -71,7 +69,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     }
   }, [selectedChat?.id]);
 
-  // Load previous messages when scrolling to top
+  //! load previous messages when scrolling to top
   useEffect(() => {
     if (!selectedChat?.id) return;
 
@@ -112,7 +110,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     onLoadPreviousMessages,
   ]);
 
-  // Load next messages when scrolling to bottom
+  //! load next messages when scrolling to bottom
   useEffect(() => {
     if (!selectedChat?.id || messages.length === 0) return;
 
@@ -145,7 +143,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     onLoadNextMessages,
   ]);
 
-  // Track user scrolling away from bottom
+  //! track user scrolling away from bottom
   useEffect(() => {
     setShowScrollButton(!bottomInView && messages.length > 0);
     if (!bottomInView) {
@@ -174,7 +172,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   };
 
   const scrollToBottom = () => {
-    // This will be handled by react-scroll-to-bottom automatically
     setShowScrollButton(false);
     hasUserScrolledRef.current = false;
   };

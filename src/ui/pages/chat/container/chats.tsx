@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
+import useChat from "@/ui/hooks/useChats";
 import {
   IChatItem,
   IChatUser,
   IGetChatsRequest,
   ISelectedChat,
-  ISendMessageData
+  ISendMessageData,
 } from "../../../../interfaces/chat";
-import { useGetChats } from "../../../hooks/useGetChats";
 import ChatContainer from "../components/chat-container";
 import Loading from "../utils/loading";
 
@@ -16,7 +16,7 @@ interface ChatsProps {
 }
 
 const Chats = ({ selectedUser }: ChatsProps) => {
-  const { 
+  const {
     chats,
     currentCallCount,
     hasMorePrevious,
@@ -27,11 +27,14 @@ const Chats = ({ selectedUser }: ChatsProps) => {
     loadPreviousMessages,
     loadNextMessages,
     sendMessage,
-    clearChat
-  } = useGetChats();
-  
+    clearChat,
+  } = useChat();
+
   const [selectedChat, setSelectedChat] = useState<ISelectedChat | null>(null);
-  const [chatParams, setChatParams] = useState<Omit<IGetChatsRequest, 'callCount'> | null>(null);
+  const [chatParams, setChatParams] = useState<Omit<
+    IGetChatsRequest,
+    "callCount"
+  > | null>(null);
 
   const initializeChatRef = useRef(initializeChat);
   const clearChatRef = useRef(clearChat);
@@ -44,16 +47,17 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
   useEffect(() => {
     if (selectedUser) {
-      // Check if this is the same user to prevent double calls
-      if (lastSelectedUserRef.current && 
-          lastSelectedUserRef.current.id === selectedUser.id && 
-          lastSelectedUserRef.current.type === selectedUser.type) {
+      if (
+        lastSelectedUserRef.current &&
+        lastSelectedUserRef.current.id === selectedUser.id &&
+        lastSelectedUserRef.current.type === selectedUser.type
+      ) {
         return;
       }
 
       lastSelectedUserRef.current = selectedUser;
       clearChatRef.current();
-      
+
       const chat: ISelectedChat = {
         id: selectedUser.id,
         name: selectedUser.name,
@@ -63,7 +67,7 @@ const Chats = ({ selectedUser }: ChatsProps) => {
         memberCount: selectedUser.type === "group" ? 0 : undefined,
       };
       setSelectedChat(chat);
-      
+
       const requestParams: IGetChatsRequest = {
         groupId: selectedUser.type === "group" ? selectedUser.id : null,
         toUserId:
@@ -102,7 +106,7 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
   const handleSendMessage = (messageData: ISendMessageData) => {
     if (!selectedChat) return;
-    
+
     sendMessage(messageData, selectedChat.id, currentUserId, selectedChat.type);
   };
 
@@ -155,11 +159,21 @@ const Chats = ({ selectedUser }: ChatsProps) => {
           onSendMessage={handleSendMessage}
           onLoadPreviousMessages={handleLoadPrevious}
           onLoadNextMessages={handleLoadNext}
-          onBack={() => {/* TODO: Implement back navigation */}}
-          onCall={() => {/* TODO: Implement voice call */}}
-          onVideoCall={() => {/* TODO: Implement video call */}}
-          onSearch={() => {/* TODO: Implement search functionality */}}
-          onInfo={() => {/* TODO: Implement user/group info */}}
+          onBack={() => {
+            /* //TODO: Implement back navigation */
+          }}
+          onCall={() => {
+            /* //TODO: Implement voice call */
+          }}
+          onVideoCall={() => {
+            /* //TODO: Implement video call */
+          }}
+          onSearch={() => {
+            /* //TODO: Implement search functionality */
+          }}
+          onInfo={() => {
+            /* //TODO: Implement user/group info */
+          }}
         />
       )}
     </div>
