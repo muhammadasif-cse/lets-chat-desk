@@ -19,4 +19,6 @@ export type TChatState = {
   hasMorePrevious: boolean;
   hasMoreNext: boolean;
   isLoadingMessages: boolean;
+  error: string | null;
+  selectedChatId: string | null;
 };

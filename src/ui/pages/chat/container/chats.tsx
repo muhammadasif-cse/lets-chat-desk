@@ -4,11 +4,9 @@ import {
   IChatItem,
   IChatUser,
   IGetChatsRequest,
-  IMessage,
   ISelectedChat,
-  ISendMessageData,
+  ISendMessageData
 } from "../../../../interfaces/chat";
-import { useAppSelector } from "../../../../redux/selector";
 import { useGetChats } from "../../../hooks/useGetChats";
 import ChatContainer from "../components/chat-container";
 import Loading from "../utils/loading";
@@ -19,35 +17,43 @@ interface ChatsProps {
 
 const Chats = ({ selectedUser }: ChatsProps) => {
   const { 
-    handleGetChats, 
-    handleLoadPreviousMessages,
-    handleLoadNextMessages,
-    isLoading, 
-    clearMessages 
-  } = useGetChats();
-  
-  const { 
-    chats, 
-    currentCallCount, 
+    chats,
+    currentCallCount,
     hasMorePrevious,
     hasMoreNext,
-    loadedCallCounts
-  } = useAppSelector((state) => state.chat);
+    loadedCallCounts,
+    isLoadingMessages,
+    initializeChat,
+    loadPreviousMessages,
+    loadNextMessages,
+    sendMessage,
+    clearChat
+  } = useGetChats();
   
   const [selectedChat, setSelectedChat] = useState<ISelectedChat | null>(null);
   const [chatParams, setChatParams] = useState<Omit<IGetChatsRequest, 'callCount'> | null>(null);
 
-  const handleGetChatsRef = useRef(handleGetChats);
-  const clearMessagesRef = useRef(clearMessages);
+  const initializeChatRef = useRef(initializeChat);
+  const clearChatRef = useRef(clearChat);
+  const lastSelectedUserRef = useRef<IChatItem | undefined>(undefined);
 
-  handleGetChatsRef.current = handleGetChats;
-  clearMessagesRef.current = clearMessages;
+  initializeChatRef.current = initializeChat;
+  clearChatRef.current = clearChat;
 
   const currentUserId = 1;
 
   useEffect(() => {
     if (selectedUser) {
-      clearMessagesRef.current();
+      // Check if this is the same user to prevent double calls
+      if (lastSelectedUserRef.current && 
+          lastSelectedUserRef.current.id === selectedUser.id && 
+          lastSelectedUserRef.current.type === selectedUser.type) {
+        return;
+      }
+
+      lastSelectedUserRef.current = selectedUser;
+      clearChatRef.current();
+      
       const chat: ISelectedChat = {
         id: selectedUser.id,
         name: selectedUser.name,
@@ -75,11 +81,10 @@ const Chats = ({ selectedUser }: ChatsProps) => {
         type: requestParams.type,
       });
 
-      console.log("Fetching chats with params:", requestParams);
-      handleGetChatsRef.current(requestParams);
+      initializeChatRef.current(selectedUser, currentUserId);
     } else {
-      console.log("No user selected, clearing state");
-      clearMessagesRef.current();
+      lastSelectedUserRef.current = undefined;
+      clearChatRef.current();
       setSelectedChat(null);
       setChatParams(null);
     }
@@ -87,37 +92,18 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
   const handleLoadPrevious = async (callCount: number): Promise<boolean> => {
     if (!chatParams) return false;
-    return await handleLoadPreviousMessages(callCount, chatParams);
+    return await loadPreviousMessages(callCount, chatParams);
   };
 
   const handleLoadNext = async (callCount: number): Promise<boolean> => {
     if (!chatParams) return false;
-    return await handleLoadNextMessages(callCount, chatParams);
+    return await loadNextMessages(callCount, chatParams);
   };
 
   const handleSendMessage = (messageData: ISendMessageData) => {
     if (!selectedChat) return;
-
-    console.log("Sending message:", messageData);
-
-    const newMessage: IMessage = {
-      messageId: Date.now().toString(),
-      message: messageData.text,
-      date: new Date().toISOString(),
-      senderName: "You",
-      userId: currentUserId,
-      toUserId: selectedChat.type === "user" ? parseInt(selectedChat.id) : 0,
-      status: "sending",
-      type: selectedChat.type,
-      isApprovalNeeded: false,
-      isNotification: false,
-      parentMessageId: messageData.replyTo?.messageId || null,
-      parentMessageText: messageData.replyTo?.text || null,
-      reactions: [],
-      attachments: messageData.attachments || [],
-      eligibleUsers: null,
-      deleteRequestedAt: null,
-    };
+    
+    sendMessage(messageData, selectedChat.id, currentUserId, selectedChat.type);
   };
 
   if (!selectedChat) {
@@ -152,7 +138,7 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
   return (
     <div className="h-full">
-      {isLoading ? (
+      {isLoadingMessages ? (
         <div className="h-full flex items-center justify-center bg-foreground">
           <Loading />
         </div>
@@ -169,11 +155,11 @@ const Chats = ({ selectedUser }: ChatsProps) => {
           onSendMessage={handleSendMessage}
           onLoadPreviousMessages={handleLoadPrevious}
           onLoadNextMessages={handleLoadNext}
-          onBack={() => console.log("Back pressed")}
-          onCall={() => console.log("Call pressed")}
-          onVideoCall={() => console.log("Video call pressed")}
-          onSearch={() => console.log("Search pressed")}
-          onInfo={() => console.log("Info pressed")}
+          onBack={() => {/* TODO: Implement back navigation */}}
+          onCall={() => {/* TODO: Implement voice call */}}
+          onVideoCall={() => {/* TODO: Implement video call */}}
+          onSearch={() => {/* TODO: Implement search functionality */}}
+          onInfo={() => {/* TODO: Implement user/group info */}}
         />
       )}
     </div>

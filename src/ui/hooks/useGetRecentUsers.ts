@@ -43,11 +43,12 @@ export const useGetRecentUsers = (): {
         dispatch(setPermissions(permissions));
         dispatch(setRecentUsers(result));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       hasFetchedRef.current = false;
+      const errorObj = error as any;
       toast.error(
-        (error as any)?.data?.message ||
-          (error as any).message ||
+        errorObj?.data?.message ||
+          errorObj?.message ||
           "Something went wrong"
       );
     }

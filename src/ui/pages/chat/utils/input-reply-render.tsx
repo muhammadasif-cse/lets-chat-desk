@@ -1,11 +1,17 @@
 import { XIcon } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 
+interface IReplyToMessage {
+  messageId: string;
+  text: string;
+  senderName: string;
+}
+
 export default function inputReplyRender({
   replyTo,
   onCancelReply,
 }: {
-  replyTo: any;
+  replyTo: IReplyToMessage;
   onCancelReply?: () => void;
 }) {
   return (

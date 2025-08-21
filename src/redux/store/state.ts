@@ -10,6 +10,8 @@ const initialState: TChatState = {
   hasMorePrevious: false,
   hasMoreNext: false,
   isLoadingMessages: false,
+  selectedChatId: null,
+  error: null,
 };
 
 export default initialState;

@@ -19,12 +19,25 @@ export const chatSlice = createSlice({
     },
     setChats: (state, action: PayloadAction<IMessage[]>) => {
       state.chats = action.payload;
+      state.error = null;
     },
     appendPreviousChats: (state, action: PayloadAction<IMessage[]>) => {
-      state.chats = [...action.payload, ...state.chats];
+      const newMessages = action.payload.filter(
+        (newMsg) =>
+          !state.chats.some(
+            (existingMsg) => existingMsg.messageId === newMsg.messageId
+          )
+      );
+      state.chats = [...newMessages, ...state.chats];
     },
     appendNextChats: (state, action: PayloadAction<IMessage[]>) => {
-      state.chats = [...state.chats, ...action.payload];
+      const newMessages = action.payload.filter(
+        (newMsg) =>
+          !state.chats.some(
+            (existingMsg) => existingMsg.messageId === newMsg.messageId
+          )
+      );
+      state.chats = [...state.chats, ...newMessages];
     },
     setCurrentCallCount: (state, action: PayloadAction<number>) => {
       state.currentCallCount = action.payload;
@@ -33,9 +46,6 @@ export const chatSlice = createSlice({
       if (!state.loadedCallCounts.includes(action.payload)) {
         state.loadedCallCounts.push(action.payload);
       }
-    },
-    setLoadedCallCounts: (state, action: PayloadAction<number[]>) => {
-      state.loadedCallCounts = action.payload;
     },
     setHasMorePrevious: (state, action: PayloadAction<boolean>) => {
       state.hasMorePrevious = action.payload;
@@ -46,6 +56,12 @@ export const chatSlice = createSlice({
     setIsLoadingMessages: (state, action: PayloadAction<boolean>) => {
       state.isLoadingMessages = action.payload;
     },
+    setSelectedChatId: (state, action: PayloadAction<string | null>) => {
+      state.selectedChatId = action.payload;
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
     resetChatState: (state) => {
       state.chats = [];
       state.currentCallCount = 0;
@@ -53,24 +69,42 @@ export const chatSlice = createSlice({
       state.hasMorePrevious = false;
       state.hasMoreNext = false;
       state.isLoadingMessages = false;
+      state.error = null;
+    },
+    addOptimisticMessage: (state, action: PayloadAction<IMessage>) => {
+      state.chats.push(action.payload);
+    },
+    updateMessageStatus: (
+      state,
+      action: PayloadAction<{ messageId: string; status: IMessage["status"] }>
+    ) => {
+      const message = state.chats.find(
+        (msg) => msg.messageId === action.payload.messageId
+      );
+      if (message) {
+        message.status = action.payload.status;
+      }
     },
   },
 });
 
-export const { 
-  setRecentUsers, 
-  setPermissions, 
-  setSearchQuery, 
-  setChats, 
+export const {
+  setRecentUsers,
+  setPermissions,
+  setSearchQuery,
+  setChats,
   appendPreviousChats,
   appendNextChats,
   setCurrentCallCount,
   addLoadedCallCount,
-  setLoadedCallCounts,
   setHasMorePrevious,
   setHasMoreNext,
   setIsLoadingMessages,
-  resetChatState
+  setSelectedChatId,
+  setError,
+  resetChatState,
+  addOptimisticMessage,
+  updateMessageStatus,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

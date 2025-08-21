@@ -1,229 +1,239 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
-import { IChatApiResponse, IGetChatsRequest } from "../../interfaces/chat";
-import { AppDispatch, RootState } from "../../redux/store";
+import { CHAT_CONFIG } from "../../constants/app.constants";
+import {
+  IChatItem,
+  IGetChatsRequest,
+  IMessage,
+  ISendMessageData,
+} from "../../interfaces/chat";
+import { RootState } from "../../redux/store";
 import {
   addLoadedCallCount,
+  addOptimisticMessage,
   appendNextChats,
   appendPreviousChats,
   resetChatState,
   setChats,
   setCurrentCallCount,
+  setError,
   setHasMoreNext,
   setHasMorePrevious,
   setIsLoadingMessages,
+  setSelectedChatId,
+  updateMessageStatus,
 } from "../../redux/store/actions";
 import { useGetChatsMutation } from "../../redux/store/mutations";
 
-export const useGetChats = (): {
-  handleGetChats: (params: IGetChatsRequest) => Promise<void>;
-  handleLoadPreviousMessages: (
-    callCount: number,
-    chatParams: Omit<IGetChatsRequest, "callCount">
-  ) => Promise<boolean>;
-  handleLoadNextMessages: (
-    callCount: number,
-    chatParams: Omit<IGetChatsRequest, "callCount">
-  ) => Promise<boolean>;
-  isLoading: boolean;
-  clearMessages: () => void;
-} => {
-  const dispatch = useDispatch<AppDispatch>();
-  const [getChats, { isLoading }] = useGetChatsMutation();
-  const { loadedCallCounts, isLoadingMessages } = useSelector(
-    (state: RootState) => state.chat
+export const useChat = () => {
+  const dispatch = useDispatch();
+  const [getChatsMutation] = useGetChatsMutation();
+  const {
+    chats,
+    currentCallCount,
+    hasMorePrevious,
+    hasMoreNext,
+    loadedCallCounts,
+    isLoadingMessages,
+    selectedChatId,
+    error,
+  } = useSelector((state: RootState) => state.chat);
+
+  const isLoadingRef = useRef(false);
+  const currentChatIdRef = useRef<string | null>(null);
+
+  const loadChats = useCallback(
+    async (params: IGetChatsRequest): Promise<boolean> => {
+      if (isLoadingRef.current) return false;
+
+      try {
+        isLoadingRef.current = true;
+        dispatch(setIsLoadingMessages(true));
+        dispatch(setError(null));
+
+        const response = await getChatsMutation(params).unwrap();
+
+        if (response.code === 200 && Array.isArray(response.result.messages)) {
+          const messages = response.result.messages;
+
+          if (params.callCount === 0) {
+            dispatch(setChats(messages));
+            dispatch(setCurrentCallCount(response.result.count));
+            dispatch(setHasMorePrevious(messages.length >= CHAT_CONFIG.PAGE_SIZE));
+            dispatch(setHasMoreNext(response.result.count > 0));
+          } else if (params.callCount > currentCallCount) {
+            dispatch(appendPreviousChats(messages));
+            dispatch(setHasMorePrevious(messages.length >= CHAT_CONFIG.PAGE_SIZE));
+          } else {
+            dispatch(appendNextChats(messages));
+            dispatch(setHasMoreNext(messages.length > 0 && params.callCount > 0));
+          }
+
+          dispatch(addLoadedCallCount(params.callCount));
+          return true;
+        }
+
+        return false;
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return false;
+        }
+
+        const errorMessage = 
+          (error as any)?.data?.message || 
+          (error instanceof Error ? error.message : "Failed to load messages");
+        dispatch(setError(errorMessage));
+        toast.error(errorMessage);
+        return false;
+      } finally {
+        isLoadingRef.current = false;
+        dispatch(setIsLoadingMessages(false));
+      }
+    },
+    [dispatch, getChatsMutation, currentCallCount]
   );
 
-  const clearMessages = useCallback(() => {
-    dispatch(resetChatState());
-  }, [dispatch]);
-
-  const handleGetChats = useCallback(
-    async ({
-      groupId,
-      toUserId,
-      type,
-      userId,
-      callCount,
-    }: IGetChatsRequest) => {
-      if (isLoading) {
-        return;
-      }
-      if (!userId && !toUserId && !groupId) {
-        toast.warning("Invalid parameters provided for fetching chat.");
+  const initializeChat = useCallback(
+    async (chatItem: IChatItem, userId: number) => {
+      if (currentChatIdRef.current === chatItem.id) {
         return;
       }
 
-      dispatch(setIsLoadingMessages(true));
+      currentChatIdRef.current = chatItem.id;
+      dispatch(setSelectedChatId(chatItem.id));
       dispatch(resetChatState());
 
-      const reqBody: IGetChatsRequest = {
-        groupId: type === "group" ? groupId : null,
-        userId: type === "user" ? userId : null,
-        toUserId: type === "user" ? toUserId : null,
-        type: type,
-        callCount: callCount,
+      const params: IGetChatsRequest = {
+        groupId: chatItem.type === "group" ? chatItem.id : null,
+        toUserId: chatItem.type === "user" ? parseInt(chatItem.id) : null,
+        userId,
+        type: chatItem.type,
+        callCount: 0,
       };
 
-      try {
-        const response = await getChats(reqBody).unwrap();
-        const { code, result } = response as IChatApiResponse;
-
-        if (code === 200 && Array.isArray(result.messages)) {
-          dispatch(setChats(result.messages));
-          dispatch(setCurrentCallCount(callCount));
-          dispatch(addLoadedCallCount(callCount));
-
-          // Set hasMorePrevious to true if we have messages and callCount > 0
-          dispatch(
-            setHasMorePrevious(result.messages.length > 0)
-          );
-          dispatch(setHasMoreNext(result.messages.length >= 20)); // Restore next loading
-        } else {
-          dispatch(setChats([]));
-          dispatch(setCurrentCallCount(callCount));
-          dispatch(addLoadedCallCount(callCount));
-          dispatch(setHasMorePrevious(false));
-          dispatch(setHasMoreNext(false));
-        }
-      } catch (error) {
-        toast.error(
-          (error as any)?.data?.message ||
-            (error as any).message ||
-            "Something went wrong"
-        );
-      } finally {
-        dispatch(setIsLoadingMessages(false));
-      }
+      await loadChats(params);
     },
-    [dispatch, isLoading, getChats]
+    [dispatch, loadChats]
   );
 
-  const handleLoadPreviousMessages = useCallback(
+  const loadPreviousMessages = useCallback(
     async (
       callCount: number,
       chatParams: Omit<IGetChatsRequest, "callCount">
     ): Promise<boolean> => {
-      if (isLoading || isLoadingMessages) {
-        console.log("Already loading, skipping previous messages request");
-        return false;
-      }
-      if (loadedCallCounts.includes(callCount)) {
-        console.log(
-          `Call count ${callCount} already loaded, skipping previous messages request`
-        );
+      if (loadedCallCounts.includes(callCount) || isLoadingMessages) {
         return false;
       }
 
-      console.log(`Loading previous messages for callCount: ${callCount}`);
-      dispatch(setIsLoadingMessages(true));
-
-      const reqBody: IGetChatsRequest = {
-        ...chatParams,
-        callCount: callCount,
-      };
-
-      try {
-        const response = await getChats(reqBody).unwrap();
-        const { code, result } = response as IChatApiResponse;
-
-        if (
-          code === 200 &&
-          Array.isArray(result.messages) &&
-          result.messages.length > 0
-        ) {
-          console.log(`Loaded ${result.messages.length} previous messages`);
-          dispatch(appendPreviousChats(result.messages));
-          dispatch(addLoadedCallCount(callCount));
-          dispatch(setHasMorePrevious(result.messages.length >= 20)); // Has more if we got a full page
-          return true;
-        }
-
-        console.log("No more previous messages available");
-        dispatch(setHasMorePrevious(false));
-        dispatch(addLoadedCallCount(callCount)); // Mark as loaded even if no data
-        return false;
-      } catch (error) {
-        console.error("Error loading previous messages:", error);
-        toast.error(
-          (error as any)?.data?.message ||
-            (error as any).message ||
-            "Failed to load previous messages"
-        );
-        return false;
-      } finally {
-        dispatch(setIsLoadingMessages(false));
-      }
+      return loadChats({ ...chatParams, callCount });
     },
-    [dispatch, isLoading, isLoadingMessages, getChats, loadedCallCounts]
+    [loadChats, loadedCallCounts, isLoadingMessages]
   );
 
-  const handleLoadNextMessages = useCallback(
+  const loadNextMessages = useCallback(
     async (
       callCount: number,
       chatParams: Omit<IGetChatsRequest, "callCount">
     ): Promise<boolean> => {
-      if (isLoading || isLoadingMessages) {
-        console.log("Already loading, skipping next messages request");
+      if (
+        loadedCallCounts.includes(callCount) ||
+        isLoadingMessages ||
+        callCount < 0
+      ) {
         return false;
       }
 
-      if (loadedCallCounts.includes(callCount)) {
-        console.log(
-          `Call count ${callCount} already loaded, skipping next messages request`
-        );
-        return false;
-      }
+      return loadChats({ ...chatParams, callCount });
+    },
+    [loadChats, loadedCallCounts, isLoadingMessages]
+  );
 
-      console.log(`Loading next messages for callCount: ${callCount}`);
-      dispatch(setIsLoadingMessages(true));
-
-      const reqBody: IGetChatsRequest = {
-        ...chatParams,
-        callCount: callCount,
+  const sendMessage = useCallback(
+    async (
+      messageData: ISendMessageData,
+      chatId: string,
+      userId: number,
+      chatType: "user" | "group"
+    ) => {
+      const optimisticMessage: IMessage = {
+        messageId: `temp-${Date.now()}`,
+        message: messageData.text,
+        date: new Date().toISOString(),
+        senderName: "You",
+        userId,
+        toUserId: chatType === "user" ? parseInt(chatId) : 0,
+        status: "sending",
+        type: chatType,
+        isApprovalNeeded: false,
+        isNotification: false,
+        parentMessageId: messageData.replyTo?.messageId || null,
+        parentMessageText: messageData.replyTo?.text || null,
+        reactions: [],
+        attachments: messageData.attachments || [],
+        eligibleUsers: null,
+        deleteRequestedAt: null,
       };
 
+      dispatch(addOptimisticMessage(optimisticMessage));
+
       try {
-        const response = await getChats(reqBody).unwrap();
-        const { code, result } = response as IChatApiResponse;
+        const response = await fetch("/api/messages/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...messageData,
+            chatId,
+            userId,
+            chatType,
+          }),
+        });
 
-        if (
-          code === 200 &&
-          Array.isArray(result.messages) &&
-          result.messages.length > 0
-        ) {
-          console.log(`Loaded ${result.messages.length} next messages`);
-          dispatch(appendNextChats(result.messages));
-          dispatch(addLoadedCallCount(callCount));
-          dispatch(setHasMoreNext(callCount > 0)); // Has more next if callCount > 0
-          return true;
-        }
-
-        console.log("No more next messages available");
-        dispatch(setHasMoreNext(false));
-        dispatch(addLoadedCallCount(callCount)); // Mark as loaded even if no data
-        return false;
-      } catch (error) {
-        console.error("Error loading next messages:", error);
-        toast.error(
-          (error as any)?.data?.message ||
-            (error as any).message ||
-            "Failed to load next messages"
+        if (!response.ok) throw new Error("Failed to send message");
+        dispatch(
+          updateMessageStatus({
+            messageId: optimisticMessage.messageId,
+            status: "sent",
+          })
         );
-        return false;
-      } finally {
-        dispatch(setIsLoadingMessages(false));
+      } catch (error) {
+        dispatch(
+          updateMessageStatus({
+            messageId: optimisticMessage.messageId,
+            status: "failed",
+          })
+        );
+        toast.error("Failed to send message");
       }
     },
-    [dispatch, isLoading, isLoadingMessages, getChats, loadedCallCounts]
+    [dispatch]
   );
+
+  const clearChat = useCallback(() => {
+    dispatch(resetChatState());
+    dispatch(setSelectedChatId(null));
+    currentChatIdRef.current = null;
+  }, [dispatch]);
 
   return {
-    handleGetChats,
-    handleLoadPreviousMessages,
-    handleLoadNextMessages,
-    isLoading,
-    clearMessages,
+    // State
+    chats,
+    currentCallCount,
+    hasMorePrevious,
+    hasMoreNext,
+    loadedCallCounts,
+    isLoadingMessages,
+    selectedChatId,
+    error,
+
+    // Actions
+    initializeChat,
+    loadPreviousMessages,
+    loadNextMessages,
+    sendMessage,
+    clearChat,
   };
 };
+
+export { useChat as useGetChats };
+export default useChat;

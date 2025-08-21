@@ -24,7 +24,7 @@ export type IMemberPermission = {
 };
 
 export interface IUserItemProps {
-  user: any;
+  user: TUser;
   newGroup?: boolean;
   selected?: boolean;
   onToggle?: () => void;

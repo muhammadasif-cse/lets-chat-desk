@@ -16,6 +16,18 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/ui/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/hooks/*": ["./src/ui/hooks/*"],
+      "@/types/*": ["./src/ui/types/*"],
+      "@/interfaces/*": ["./src/interfaces/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/redux/*": ["./src/redux/*"],
+      "@/utils/*": ["./src/ui/utils/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["src/electron"],

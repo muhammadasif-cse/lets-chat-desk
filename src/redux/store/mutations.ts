@@ -1,5 +1,6 @@
 /** @format */
 
+import { API_ENDPOINTS } from "../../constants/app.constants";
 import EAPI_METHODS from "../../enums/api-methods";
 import { IGetChatsRequest } from "../../interfaces/chat";
 import APIHeader from "../APIHeader";
@@ -12,7 +13,7 @@ export const ChatMutations = apiTag.injectEndpoints({
   endpoints: (builder) => ({
     getChats: builder.mutation({
       query: (body: IGetChatsRequest) => ({
-        url: `/chatservice/chats/GetChats`,
+        url: API_ENDPOINTS.GET_CHATS,
         method: "POST",
         body: body,
       }),
@@ -20,7 +21,7 @@ export const ChatMutations = apiTag.injectEndpoints({
 
     getRecentUsers: builder.mutation({
       query: () => ({
-        url: `/chatservice/chats/GetRecentChat`,
+        url: API_ENDPOINTS.GET_RECENT_CHAT,
         method: EAPI_METHODS.GET,
       }),
     }),

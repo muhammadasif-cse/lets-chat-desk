@@ -1,6 +1,7 @@
 import { Toaster } from "sonner";
 import ReduxProvider from "../redux/redux-provider";
 import AuthGuard from "./components/auth-guard";
+import ErrorBoundary from "./components/error-boundary";
 import useAuth from "./hooks/useAuth";
 import Login from "./pages/auth/login";
 import Index from "./pages/chat";
@@ -17,10 +18,12 @@ function AppInner() {
 
 const App = () => {
   return (
-    <ReduxProvider>
-      <AppInner />
-      <Toaster />
-    </ReduxProvider>
+    <ErrorBoundary>
+      <ReduxProvider>
+        <AppInner />
+        <Toaster />
+      </ReduxProvider>
+    </ErrorBoundary>
   );
 };
 

@@ -2,8 +2,8 @@
 
 import { createSlice } from "@reduxjs/toolkit";
 
-import initialState from "./state";
 import { RootState } from "../store";
+import initialState from "./state";
 
 export const authSlice = createSlice({
   name: "auth",

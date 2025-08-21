@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { TLogin } from "../../types/login.type";
-import useForm, { IValidation } from "../../hooks/useForm";
-import { Progress } from "../../components/ui/progress";
-import { Input } from "../../components/ui/input";
 import { EyeClosedIcon, EyeIcon, UserIcon } from "lucide-react";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Button } from "../../components/ui/button";
-import { Label } from "../../components/ui/label";
+import { useState } from "react";
 import { toast } from "sonner";
-import useAuth from "../../hooks/useAuth";
 import { useLoginMutation } from "../../../redux/auth/mutation";
+import { Button } from "../../components/ui/button";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Progress } from "../../components/ui/progress";
+import useAuth from "../../hooks/useAuth";
+import useForm, { IValidation } from "../../hooks/useForm";
+import { TLogin } from "../../types/login.type";
 
 const Login = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -42,9 +42,9 @@ const Login = () => {
     },
   };
 
-  const onSubmit = async (form_data: any) => {
+  const onSubmit = async (form_data: TLogin) => {
     try {
-      const response: any = await login(form_data).unwrap();
+      const response = await login(form_data).unwrap();
       if (response?.code === 200 || response?.success) {
         toast.success(response?.message || "Login successful!");
 
@@ -55,18 +55,19 @@ const Login = () => {
       } else {
         toast.error(response?.message || "Login failed!");
       }
-    } catch (error: any) {
-      if (error?.status === "FETCH_ERROR") {
+    } catch (error: unknown) {
+      const errorObj = error as any;
+      if (errorObj?.status === "FETCH_ERROR") {
         console.error("🚀 ~ Network error details:", error);
         toast.error(
           "Network error: Unable to connect to server. This might be a CORS issue or network connectivity problem."
         );
-      } else if (error?.data?.message) {
-        toast.error(error.data.message);
-      } else if (error?.message) {
-        toast.error(error.message);
-      } else if (error?.error) {
-        toast.error(error.error);
+      } else if (errorObj?.data?.message) {
+        toast.error(errorObj.data.message);
+      } else if (errorObj?.message) {
+        toast.error(errorObj.message);
+      } else if (errorObj?.error) {
+        toast.error(errorObj.error);
       } else {
         toast.error("Something went wrong! Please try again.");
       }
