@@ -14,7 +14,6 @@ import Header from "./header";
 import Message from "./message";
 import MessageInput from "./message-input";
 import { WelcomeScreen } from "./welcome-screen";
-
 const ChatContainer: React.FC<IChatContainerProps> = ({
   selectedChat,
   messages = [],
@@ -40,43 +39,86 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   const isLoadingRef = useRef<boolean>(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = () => {
-    if (selectedChat?.id && messages.length > 0 && currentCallCount === 0) {
-      const container = messagesContainerRef.current;
-      if (container) {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    } else {
-      const container = messagesContainerRef.current;
-      if (container) {
-        const currentScrollTop = container.scrollTop;
-        container.scrollTo({
-          top: currentScrollTop,
-          behavior: "auto",
-        });
-      }
-    }
-  };
+  const previousMessagesLength = useRef<number>(0);
+  const isScrolling = useRef<boolean>(false);
+  const shouldAutoScroll = useRef<boolean>(true);
+  const scrollTimeout = useRef<number>();
+  const scrollPositionBeforeLoad = useRef<number>(0);
+  const scrollHeightBeforeLoad = useRef<number>(0);
 
-  const handleLoadPrevious = useCallback(() => {
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+
+    const container = messagesContainerRef.current;
+    const scrollTop = container.scrollTop;
+    const scrollHeight = container.scrollHeight;
+    const clientHeight = container.clientHeight;
+
+    isScrolling.current = true;
+
+    if (scrollTimeout.current) {
+      clearTimeout(scrollTimeout.current);
+    }
+
+    scrollTimeout.current = window.setTimeout(() => {
+      isScrolling.current = false;
+
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+      shouldAutoScroll.current = isAtBottom;
+    }, 300);
+  }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (
+      !messagesContainerRef.current ||
+      !shouldAutoScroll.current ||
+      isScrolling.current
+    )
+      return;
+
+    const container = messagesContainerRef.current;
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    });
+  }, []);
+
+  const handleLoadPrevious = useCallback(async () => {
     if (isLoadingRef.current || !hasMorePrevious || isLoadingPrevious) {
       return;
     }
+
     const prevCallCount = currentCallCount + 1;
     if (!loadedCallCounts.includes(prevCallCount)) {
       console.log("Loading previous messages at callCount:", prevCallCount);
 
+      const container = messagesContainerRef.current;
+      if (container) {
+        scrollPositionBeforeLoad.current = container.scrollTop;
+        scrollHeightBeforeLoad.current = container.scrollHeight;
+      }
+
       isLoadingRef.current = true;
       setIsLoadingPrevious(true);
+      shouldAutoScroll.current = false;
 
       dispatch(setCurrentCallCount(prevCallCount));
-      onLoadPreviousMessages?.(prevCallCount).finally(() => {
+
+      try {
+        await onLoadPreviousMessages?.(prevCallCount);
+        setTimeout(() => {
+          if (container && scrollHeightBeforeLoad.current > 0) {
+            const newScrollHeight = container.scrollHeight;
+            const heightAdded =
+              newScrollHeight - scrollHeightBeforeLoad.current;
+            container.scrollTop =
+              scrollPositionBeforeLoad.current + heightAdded;
+          }
+        }, 0);
+      } finally {
         isLoadingRef.current = false;
         setIsLoadingPrevious(false);
-      });
+      }
     }
   }, [
     currentCallCount,
@@ -101,7 +143,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     onLoadMore: handleLoadPrevious,
     isLoading: isLoadingPrevious,
     hasMore: hasMorePrevious && !isLoadingPrevious,
-    threshold: 0.95,
+    threshold: 0.1,
   });
 
   const bottomInfiniteScrollRef = useInfiniteScroll({
@@ -111,17 +153,25 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     threshold: 0.1,
   });
 
-  const setMessagesContainerRef = useCallback((node: HTMLDivElement | null) => {
-    if (messagesContainerRef.current !== node) {
-      (messagesContainerRef as any).current = node;
-    }
-  }, []);
+  const setMessagesContainerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (messagesContainerRef.current !== node) {
+        (messagesContainerRef as any).current = node;
+
+        if (node) {
+          node.addEventListener("scroll", handleScroll);
+        }
+      }
+    },
+    [handleScroll]
+  );
 
   const handleSendMessage = (messageData: ISendMessageData) => {
     if (onSendMessage) {
       onSendMessage(messageData);
     }
     setReplyTo(null);
+    shouldAutoScroll.current = true;
   };
 
   const handleReplyToMessage = (message: IMessage) => {
@@ -137,8 +187,31 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   };
 
   useEffect(() => {
-    handleScroll();
+    if (selectedChat?.id && messages.length > 0) {
+      shouldAutoScroll.current = true;
+      scrollToBottom("auto");
+      previousMessagesLength.current = messages.length;
+    }
   }, [selectedChat?.id]);
+
+  useEffect(() => {
+    const isNewMessage = messages.length > previousMessagesLength.current;
+
+    if (isNewMessage && shouldAutoScroll.current) {
+      scrollToBottom();
+    }
+
+    previousMessagesLength.current = messages.length;
+  }, [messages.length, scrollToBottom]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+    };
+  }, []);
 
   if (!selectedChat) {
     return <WelcomeScreen />;
@@ -161,6 +234,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
         <div
           ref={setMessagesContainerRef}
           className="h-full overflow-y-auto px-4 py-4 chat-scrollbar"
+          onScroll={handleScroll}
         >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">

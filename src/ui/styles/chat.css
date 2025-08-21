@@ -46,7 +46,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background-color: #8696a0;
+  background-color: #00D95F;
   animation: loading-dots 1.4s infinite ease-in-out both;
 }
 
