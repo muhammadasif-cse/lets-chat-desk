@@ -25,13 +25,7 @@ const RecentList = ({ onUserSelect, selectedUserId }: RecentListProps) => {
   const chatsToShow = filteredChats.length > 0 ? filteredChats : [];
 
   return (
-    <div
-      className="h-screen overflow-auto custom-scrollbar"
-      style={{
-        scrollbarColor: "#2a3942 #111B21",
-        scrollbarWidth: "thin",
-      }}
-    >
+    <div className="h-screen overflow-y-auto">
       {isLoading ? (
         <UsersSkeleton skeleton={14} />
       ) : (

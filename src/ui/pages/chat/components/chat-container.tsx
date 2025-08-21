@@ -1,10 +1,7 @@
-import { ChevronDown } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import { useInView } from "react-intersection-observer";
-import ScrollToBottom from "react-scroll-to-bottom";
-import { Button } from "../../../components/ui/button";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { useDispatch } from "react-redux";
+import { useInfiniteScroll } from "../../../../hooks/use-infinite-scroll";
 import {
   IChatContainerProps,
   IMessage,
@@ -40,123 +37,91 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   const [replyTo, setReplyTo] = useState<IMessageReply | null>(null);
   const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
   const [isLoadingNext, setIsLoadingNext] = useState(false);
-  const [showScrollButton, setShowScrollButton] = useState(false);
-
-  const selectedChatIdRef = useRef<string | undefined>(selectedChat?.id);
   const isLoadingRef = useRef<boolean>(false);
-  const hasUserScrolledRef = useRef<boolean>(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const { ref: topRef, inView: topInView } = useInView({
-    threshold: 0.1,
-    rootMargin: "100px 0px 0px 0px",
-    triggerOnce: false,
-  });
-
-  const { ref: bottomRef, inView: bottomInView } = useInView({
-    threshold: 0.1,
-    rootMargin: "0px 0px 50px 0px",
-    triggerOnce: false,
-  });
-
-  useEffect(() => {
-    if (selectedChatIdRef.current !== selectedChat?.id) {
-      selectedChatIdRef.current = selectedChat?.id;
-      setIsLoadingPrevious(false);
-      setIsLoadingNext(false);
-      setShowScrollButton(false);
-      isLoadingRef.current = false;
-      hasUserScrolledRef.current = false;
-    }
-  }, [selectedChat?.id]);
-
-  //! load previous messages when scrolling to top
-  useEffect(() => {
-    if (!selectedChat?.id) return;
-
-    const timeoutId = setTimeout(() => {
-      if (
-        topInView &&
-        !isLoadingPrevious &&
-        !isLoadingRef.current &&
-        hasUserScrolledRef.current
-      ) {
-        const prevCallCount = currentCallCount + 1;
-        if (hasMorePrevious && !loadedCallCounts.includes(prevCallCount)) {
-          console.log("Loading previous messages at callCount:", prevCallCount);
-
-          isLoadingRef.current = true;
-          setIsLoadingPrevious(true);
-
-          dispatch(setCurrentCallCount(prevCallCount));
-          onLoadPreviousMessages?.(prevCallCount).finally(() => {
-            setTimeout(() => {
-              isLoadingRef.current = false;
-              setIsLoadingPrevious(false);
-            }, 100);
-          });
-        }
+  const handleScroll = () => {
+    if (selectedChat?.id && messages.length > 0 && currentCallCount === 0) {
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "smooth",
+        });
       }
-    }, 300);
+    } else {
+      const container = messagesContainerRef.current;
+      if (container) {
+        const currentScrollTop = container.scrollTop;
+        container.scrollTo({
+          top: currentScrollTop,
+          behavior: "auto",
+        });
+      }
+    }
+  };
 
-    return () => clearTimeout(timeoutId);
+  const handleLoadPrevious = useCallback(() => {
+    if (isLoadingRef.current || !hasMorePrevious || isLoadingPrevious) {
+      return;
+    }
+    const prevCallCount = currentCallCount + 1;
+    if (!loadedCallCounts.includes(prevCallCount)) {
+      console.log("Loading previous messages at callCount:", prevCallCount);
+
+      isLoadingRef.current = true;
+      setIsLoadingPrevious(true);
+
+      dispatch(setCurrentCallCount(prevCallCount));
+      onLoadPreviousMessages?.(prevCallCount).finally(() => {
+        isLoadingRef.current = false;
+        setIsLoadingPrevious(false);
+      });
+    }
   }, [
-    topInView,
-    isLoadingPrevious,
-    selectedChat?.id,
     currentCallCount,
     hasMorePrevious,
     loadedCallCounts,
-    dispatch,
     onLoadPreviousMessages,
   ]);
 
-  //! load next messages when scrolling to bottom
-  useEffect(() => {
-    if (!selectedChat?.id || messages.length === 0) return;
+  const handleLoadNext = useCallback(() => {
+    if (isLoadingRef.current || !hasMoreNext) return;
 
-    const timeoutId = setTimeout(() => {
-      if (
-        bottomInView &&
-        !isLoadingNext &&
-        hasMoreNext &&
-        !isLoadingRef.current
-      ) {
-        const nextCallCount = currentCallCount - 1;
-        if (nextCallCount >= 0 && !loadedCallCounts.includes(nextCallCount)) {
-          setIsLoadingNext(true);
-          onLoadNextMessages?.(nextCallCount).finally(() => {
-            setIsLoadingNext(false);
-          });
-        }
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [
-    bottomInView,
-    isLoadingNext,
-    hasMoreNext,
-    selectedChat?.id,
-    messages.length,
-    currentCallCount,
-    loadedCallCounts,
-    onLoadNextMessages,
-  ]);
-
-  //! track user scrolling away from bottom
-  useEffect(() => {
-    setShowScrollButton(!bottomInView && messages.length > 0);
-    if (!bottomInView) {
-      hasUserScrolledRef.current = true;
+    const nextCallCount = currentCallCount - 1;
+    if (nextCallCount >= 0 && !loadedCallCounts.includes(nextCallCount)) {
+      setIsLoadingNext(true);
+      onLoadNextMessages?.(nextCallCount).finally(() => {
+        setIsLoadingNext(false);
+      });
     }
-  }, [bottomInView, messages.length]);
+  }, [currentCallCount, hasMoreNext, loadedCallCounts, onLoadNextMessages]);
+
+  const topInfiniteScrollRef = useInfiniteScroll({
+    onLoadMore: handleLoadPrevious,
+    isLoading: isLoadingPrevious,
+    hasMore: hasMorePrevious && !isLoadingPrevious,
+    threshold: 0.95,
+  });
+
+  const bottomInfiniteScrollRef = useInfiniteScroll({
+    onLoadMore: handleLoadNext,
+    isLoading: isLoadingNext,
+    hasMore: hasMoreNext && !isLoadingNext,
+    threshold: 0.1,
+  });
+
+  const setMessagesContainerRef = useCallback((node: HTMLDivElement | null) => {
+    if (messagesContainerRef.current !== node) {
+      (messagesContainerRef as any).current = node;
+    }
+  }, []);
 
   const handleSendMessage = (messageData: ISendMessageData) => {
     if (onSendMessage) {
       onSendMessage(messageData);
     }
     setReplyTo(null);
-    // react-scroll-to-bottom will automatically scroll on new message
   };
 
   const handleReplyToMessage = (message: IMessage) => {
@@ -171,10 +136,9 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     setReplyTo(null);
   };
 
-  const scrollToBottom = () => {
-    setShowScrollButton(false);
-    hasUserScrolledRef.current = false;
-  };
+  useEffect(() => {
+    handleScroll();
+  }, [selectedChat?.id]);
 
   if (!selectedChat) {
     return <WelcomeScreen />;
@@ -193,10 +157,10 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
         />
       </div>
 
-      <div className="flex-1 relative overflow-auto">
-        <ScrollToBottom
-          className="h-full"
-          scrollViewClassName="px-4 py-4 chat-scrollbar"
+      <div className="flex-1 relative overflow-hidden">
+        <div
+          ref={setMessagesContainerRef}
+          className="h-full overflow-y-auto px-4 py-4 chat-scrollbar"
         >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
@@ -208,7 +172,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
             </div>
           ) : (
             <>
-              <div ref={topRef} className="h-1" />
+              <div ref={topInfiniteScrollRef} className="h-1" />
 
               {isLoadingPrevious && (
                 <div className="flex justify-center py-4">
@@ -238,6 +202,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                       : undefined
                   }
                   onReply={() => handleReplyToMessage(message)}
+                  data-message-id={message.messageId}
                 />
               ))}
 
@@ -247,22 +212,10 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                 </div>
               )}
 
-              <div ref={bottomRef} className="h-1" />
+              <div ref={bottomInfiniteScrollRef} className="h-1" />
             </>
           )}
-        </ScrollToBottom>
-
-        {showScrollButton && (
-          <div className="absolute bottom-4 right-6 z-20">
-            <Button
-              onClick={scrollToBottom}
-              className="cursor-pointer shrink-0 bg-dark3/90 hover:bg-dark3 text-gray hover:text-light rounded-full shadow-lg backdrop-blur-sm transition-all"
-              size="icon"
-            >
-              <ChevronDown className="size-5" />
-            </Button>
-          </div>
-        )}
+        </div>
       </div>
 
       <div className="flex-shrink-0 sticky bottom-0 z-30">
