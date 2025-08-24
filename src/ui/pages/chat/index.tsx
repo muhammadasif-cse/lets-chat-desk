@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSignalRInvoke } from "../../../hooks/useSignalRInvoke";
 import { IChatItem } from "../../../interfaces/chat";
 import {
   ResizableHandle,
@@ -10,6 +11,7 @@ import Chats from "./container/chats";
 import RecentList from "./container/recent-list";
 
 const Index = () => {
+  const signalR = useSignalRInvoke();
   const [selectedUser, setSelectedUser] = useState<IChatItem | null>(null);
 
   const handleUserSelect = (user: IChatItem) => {

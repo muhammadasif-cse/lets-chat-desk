@@ -43,4 +43,5 @@ export const ENV_CONFIG = {
   IS_DEVELOPMENT: import.meta.env.DEV,
   IS_PRODUCTION: import.meta.env.PROD,
   API_BASE_URL: import.meta.env.VITE_API_GATEWAY_URL || 'localhost:3000',
+  SOCKET_URL: import.meta.env.VITE_API_HUB_URL || 'ws://localhost:3000',
 } as const;
