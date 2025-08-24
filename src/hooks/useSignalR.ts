@@ -313,7 +313,6 @@ export const useSignalR = (
     setupConnection();
     return () => {
       isMounted = false;
-      // Only clean up if this hook "owns" the singleton
       if (
         singletonConnection &&
         singletonAuthUserId === authUserId &&
