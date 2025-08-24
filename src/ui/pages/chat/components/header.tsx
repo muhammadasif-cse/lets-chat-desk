@@ -1,3 +1,5 @@
+import { useAppSelector } from "@/redux/selector";
+import { setTypingStatus } from "@/redux/store/actions";
 import {
   ArrowLeft,
   BadgeCheckIcon,
@@ -13,7 +15,8 @@ import {
   Video,
   VolumeXIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { IHeaderProps } from "../../../../interfaces/chat";
 import { Button } from "../../../components/ui/button";
 import {
@@ -31,11 +34,33 @@ const Header = ({
   onSearch,
   onInfo,
 }: IHeaderProps) => {
+  const { typingStatus } = useAppSelector((state) => state.chat);
+  const dispatch = useDispatch();
   const [imageError, setImageError] = useState(false);
 
   const handleImageError = () => {
     setImageError(true);
   };
+
+  useEffect(() => {
+    if (typingStatus?.isTyping) {
+      const timeout = setTimeout(() => {
+        dispatch(
+          setTypingStatus({
+            senderId: 0,
+            receiverId: 0,
+            isTyping: false,
+            username: "",
+            groupId: undefined,
+            type: "user",
+            key: "",
+          })
+        );
+      }, 5000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [typingStatus, dispatch]);
 
   if (!selectedChat) {
     return (
@@ -49,7 +74,35 @@ const Header = ({
 
   const isGroup = selectedChat.type === "group";
 
+  const isCurrentChatTyping = () => {
+    if (!typingStatus || !typingStatus.isTyping) return false;
+
+    if (isGroup) {
+      return typingStatus.groupId === selectedChat.id && typingStatus.isTyping;
+    } else {
+      return (
+        typingStatus.senderId?.toString() === selectedChat.id &&
+        typingStatus.isTyping
+      );
+    }
+  };
+
+  const getTypingText = () => {
+    if (!isCurrentChatTyping()) return null;
+
+    if (isGroup) {
+      return `${typingStatus?.username || "Someone"} is typing...`;
+    } else {
+      return "typing...";
+    }
+  };
+
   const getStatusText = () => {
+    const typingText = getTypingText();
+    if (typingText) {
+      return typingText;
+    }
+
     if (isGroup) {
       if (selectedChat.memberCount && selectedChat.totalOnline) {
         return `${selectedChat.memberCount} members, ${selectedChat.totalOnline} online`;
@@ -136,7 +189,15 @@ const Header = ({
           <h2 className="text-light font-medium text-base truncate">
             {selectedChat.name}
           </h2>
-          <p className="text-gray text-sm truncate">{getStatusText()}</p>
+          <div className="flex items-center">
+            <p
+              className={`text-sm truncate transition-colors ${
+                isCurrentChatTyping() ? "text-green2" : "text-gray"
+              }`}
+            >
+              {getStatusText()}
+            </p>
+          </div>
         </div>
       </div>
 

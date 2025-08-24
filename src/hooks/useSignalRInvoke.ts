@@ -120,6 +120,57 @@ export const useSignalRInvoke = (): ISignalRProps => {
   }, [connection]);
 
   const getConnection = useCallback(() => globalConnection, []);
+  const createSignalRMethod = useCallback(
+    (methodName: string) => {
+      return async (...args: any[]) => {
+        if (!checkConnection()) {
+          console.warn(`Cannot call ${methodName}: not connected`);
+          return false;
+        }
+
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (retryCount < maxRetries) {
+          try {
+            await connection?.invoke(methodName, ...args);
+            return true;
+          } catch (error: any) {
+            retryCount++;
+            console.error(
+              `Error calling ${methodName} (attempt ${retryCount}/${maxRetries}):`,
+              error
+            );
+
+            if (
+              error?.message?.includes("connection") ||
+              error?.message?.includes("disconnected")
+            ) {
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * retryCount)
+              );
+
+              if (!checkConnection()) {
+                console.warn(
+                  `${methodName} failed - connection lost during retry`
+                );
+                return false;
+              }
+            } else if (retryCount >= maxRetries) {
+              console.error(
+                `${methodName} failed after ${maxRetries} attempts:`,
+                error
+              );
+              return false;
+            }
+          }
+        }
+
+        return false;
+      };
+    },
+    [connection, checkConnection]
+  );
 
   //! enhanced send message with file upload support
   const sendMessage = useCallback(
@@ -200,7 +251,7 @@ export const useSignalRInvoke = (): ISignalRProps => {
       }
 
       try {
-        await connection?.invoke("SendMessage", reqBody);
+        await createSignalRMethod("SendMessage")(reqBody);
 
         dispatch(
           updateMessageStatus({
@@ -217,19 +268,27 @@ export const useSignalRInvoke = (): ISignalRProps => {
               fileName: item.file.name,
               fileSize: item.file.size,
               fileType: item.file.type,
-              uuid: item.uuid
+              uuid: item.uuid,
             });
-            
+
             formData.append(`files[${index}].File`, item.file);
             formData.append(`files[${index}].FileName`, item.uuid);
           });
 
           console.log("🚀 ~ FormData entries:");
           for (let [key, value] of formData.entries()) {
-            console.log(`${key}:`, value instanceof File ? `File(${value.name}, ${value.size} bytes)` : value);
+            console.log(
+              `${key}:`,
+              value instanceof File
+                ? `File(${value.name}, ${value.size} bytes)`
+                : value
+            );
           }
 
-          console.log("🚀 ~ Sending upload request to:", API_ENDPOINTS.UPLOAD_CHAT_ATTACHMENT);
+          console.log(
+            "🚀 ~ Sending upload request to:",
+            API_ENDPOINTS.UPLOAD_CHAT_ATTACHMENT
+          );
 
           try {
             const uploadResponse = await uploadChatFile(formData).unwrap();
@@ -349,6 +408,27 @@ export const useSignalRInvoke = (): ISignalRProps => {
 
   //! memoized return value
 
+  //! send typing status
+
+  const typingStatus = useCallback(
+    async (
+      fromUserId: number,
+      toUserId: number,
+      isTyping: boolean,
+      type: "group" | "user",
+      groupId: string | null = null
+    ) => {
+      await createSignalRMethod("SendTyping")(
+        parseInt(fromUserId.toString()),
+        parseInt(toUserId.toString()),
+        isTyping,
+        type,
+        groupId
+      );
+    },
+    [createSignalRMethod]
+  );
+
   return useMemo(
     () => ({
       connection,
@@ -361,6 +441,7 @@ export const useSignalRInvoke = (): ISignalRProps => {
       forceReconnect,
       checkConnection,
       sendMessage,
+      typingStatus,
       markMultipleMessageAsSeen: async () => {
         throw new Error("markMultipleMessageAsSeen not implemented");
       },
@@ -399,6 +480,7 @@ export const useSignalRInvoke = (): ISignalRProps => {
       connectionError,
       connectionMetrics,
       sendMessage,
+      typingStatus,
       reconnect,
       forceReconnect,
       checkConnection,

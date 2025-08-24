@@ -21,4 +21,13 @@ export type TChatState = {
   isLoadingMessages: boolean;
   error: string | null;
   selectedChatId: string | null;
+  typingStatus: {
+    senderId: number;
+    receiverId: number;
+    isTyping: boolean;
+    username?: string;
+    groupId?: string;
+    type?: "user" | "group";
+    key?: string;
+  } | null;
 };

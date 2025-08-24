@@ -95,13 +95,35 @@ export const chatSlice = createSlice({
     },
     updateMessageAttachments: (
       state,
-      action: PayloadAction<{ messageId: string; attachments: IMessage["attachments"] }>
+      action: PayloadAction<{
+        messageId: string;
+        attachments: IMessage["attachments"];
+      }>
     ) => {
       const message = state.chats.find(
         (msg) => msg.messageId === action.payload.messageId
       );
       if (message) {
         message.attachments = action.payload.attachments;
+      }
+    },
+    setTypingStatus: (
+      state,
+      action: PayloadAction<{
+        senderId: number;
+        receiverId: number;
+        isTyping: boolean;
+        username?: string;
+        groupId?: string;
+        type?: "user" | "group";
+        key?: string;
+      }>
+    ) => {
+      if (!action.payload.isTyping) {
+        // Clear typing status when isTyping is false
+        state.typingStatus = null;
+      } else {
+        state.typingStatus = action.payload;
       }
     },
   },
@@ -126,6 +148,7 @@ export const {
   addOptimisticMessage,
   updateMessageStatus,
   updateMessageAttachments,
+  setTypingStatus,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

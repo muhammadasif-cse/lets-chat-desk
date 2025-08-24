@@ -1,6 +1,10 @@
 import { IChatItem } from "@/interfaces/chat";
 import { useAppSelector } from "@/redux/selector";
-import { setUpdateRecentUsers } from "@/redux/store/actions";
+import {
+    addOptimisticMessage,
+    setTypingStatus,
+    setUpdateRecentUsers,
+} from "@/redux/store/actions";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
 
@@ -92,34 +96,53 @@ export const useSignalREvent = (
       };
 
       dispatch(setUpdateRecentUsers(recentUserUpdate));
+      if (!isOwnMessage) {
+        addOptimisticMessage(res);
+      }
     },
     [authUserId, dispatch, selectedChatId, recentUsers]
   );
 
-  //   //! typing status handler
-  //   const handleTypingStatus = useCallback(
-  //     (data: any) => {
-  //       const { fromUserId, toUserId, isTyping, userName, groupId, type } = data;
-  //       const currentSelected = selectedUserInfoRef.current;
-  //       const key =
-  //         fromUserId?.toString() === currentSelected?.id?.toString()
-  //           ? "both"
-  //           : "left";
+  //* typing status handler
+  const typingStatus = useCallback(
+    (data: any) => {
+      console.log("🔄 Typing status received:", data);
+      const { fromUserId, toUserId, isTyping, userName, groupId, type } = data;
+      let isRelevantChat = false;
+      let key = "left";
 
-  //       dispatch(
-  //         setTypingStatus({
-  //           senderId: fromUserId,
-  //           receiverId: toUserId,
-  //           isTyping,
-  //           username: userName || "",
-  //           groupId: groupId || null,
-  //           type,
-  //           key,
-  //         })
-  //       );
-  //     },
-  //     [dispatch]
-  //   );
+      if (type === "group" && groupId) {
+        isRelevantChat = groupId === selectedChatId;
+        key = fromUserId?.toString() === selectedChatId ? "both" : "left";
+      } else {
+        isRelevantChat = fromUserId?.toString() === selectedChatId;
+        key = fromUserId?.toString() === selectedChatId ? "both" : "left";
+      }
+
+      console.log("🔄 Typing status processed:", {
+        isRelevantChat,
+        selectedChatId,
+        fromUserId,
+        groupId,
+        type,
+        isTyping,
+        userName,
+      });
+
+      dispatch(
+        setTypingStatus({
+          senderId: fromUserId,
+          receiverId: toUserId,
+          isTyping,
+          username: userName || "",
+          groupId: groupId || null,
+          type,
+          key,
+        })
+      );
+    },
+    [dispatch, selectedChatId]
+  );
 
   //   //! message seen handler
   //   const handleMarkSeen = useCallback(
@@ -661,7 +684,7 @@ export const useSignalREvent = (
   const signalREvents = useMemo(
     () => ({
       OnReceiveMessage: receiveMessage,
-      //   OnReceiveTyping: handleTypingStatus,
+      OnReceiveTyping: typingStatus,
       //   OnSeenMessage: handleMarkSeen,
       //   OnSeenAllMessage: handleSeenAllMessage,
       //   OnApprovalDecision: handleApprovalDecision,
@@ -682,7 +705,8 @@ export const useSignalREvent = (
     }),
     [
       receiveMessage,
-      //   handleTypingStatus,
+      typingStatus,
+      selectedChatId,
       //   handleMarkSeen,
       //   handleSeenAllMessage,
       //   handleApprovalDecision,
