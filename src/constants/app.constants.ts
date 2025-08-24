@@ -19,6 +19,7 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   GET_CHATS: "/chatservice/chats/GetChats",
   GET_RECENT_CHAT: "/chatservice/chats/GetRecentChat",
+  UPLOAD_CHAT_ATTACHMENT: "/chatservice/chats/uploadAttachment",
 } as const;
 
 // File upload constants

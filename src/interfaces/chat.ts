@@ -22,10 +22,11 @@ export interface IMessage {
 }
 
 export interface IMessageAttachment {
-  type: "image" | "video" | "audio" | "document";
+  fileId?: string; // From API response
+  type?: "image" | "video" | "audio" | "document"; // Computed from fileName
   filePath: string | null;
   fileName: string;
-  url?: string;
+  url?: string; // Computed from filePath
   size?: string;
   duration?: string;
 }
@@ -34,6 +35,7 @@ export interface IMessageReply {
   messageId: string;
   text: string;
   senderName: string;
+  attachments?: IMessageAttachment[];
 }
 
 export interface IMessageMention {
@@ -101,7 +103,7 @@ export interface IChatUser {
 export interface ISendMessageData {
   text: string;
   replyTo?: IMessageReply;
-  attachments?: IMessageAttachment[];
+  attachments?: File[]; // Support File objects for upload
   isApprovalNeeded?: boolean;
 }
 
@@ -186,7 +188,8 @@ export interface IMessageProps {
   senderName: string;
   senderPhoto?: string;
   status: "sent" | "delivered" | "seen" | "failed" | "sending" | "queued";
-  attachment?: IMessageAttachment;
+  attachment?: IMessageAttachment; // First attachment for backward compatibility
+  attachments?: IMessageAttachment[]; // All attachments
   replyTo?: IMessageReply;
   onReply?: () => void;
 }

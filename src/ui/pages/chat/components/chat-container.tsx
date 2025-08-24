@@ -11,6 +11,7 @@ import {
 } from "../../../../interfaces/chat";
 import { setCurrentCallCount } from "../../../../redux/store/actions";
 import Loading from "../utils/loading";
+import { processAttachments } from "../utils/process-attachments";
 import Header from "./header";
 import Message from "./message";
 import MessageInput from "./message-input";
@@ -178,18 +179,21 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
 
     const reqBody = {
       messageId: tempId,
-      userId: isGroup ? null : parseInt(selectedChat.id),
+      userId: isGroup ? null : parseInt(currentUserId || "0"),
       toUserId: isGroup ? null : parseInt(selectedChat.id),
       groupId: isGroup ? selectedChat.id : null,
       message: messageData.text,
       text: messageData.text,
       type: selectedChat.type,
+      files: messageData.attachments || [],
       attachments: messageData.attachments || [],
       isApprovalNeeded: Boolean(messageData?.isApprovalNeeded),
       eligibleUsers: (selectedChat as any)?.eligibleUsers || [],
       parentMessageId: replyTo?.messageId || null,
       parentMessageText: replyTo?.text || null,
     };
+
+    console.log("🚀 ~ ChatContainer ~ sending message:", reqBody);
 
     if (onSendMessage) {
       onSendMessage(reqBody as any);
@@ -199,10 +203,19 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   };
 
   const handleReplyToMessage = (message: IMessage) => {
+    // Helper function to get sender name (same logic as in render)
+    const getSenderName = (userId: number, fallbackName?: string) => {
+      if (userId.toString() === currentUserId) {
+        return "You";
+      }
+      const user = users.find(u => u.id === userId.toString());
+      return user?.name || fallbackName || selectedChat?.name || "User";
+    };
+
     setReplyTo({
       messageId: message.messageId,
       text: message.message,
-      senderName: message.senderName,
+      senderName: getSenderName(message.userId, message.senderName),
     });
   };
 
@@ -277,31 +290,61 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                 </div>
               )}
 
-              {messages.map((message) => (
-                <Message
-                  key={message.messageId}
-                  id={message.messageId}
-                  text={message.message}
-                  timestamp={message.date}
-                  isOwn={message.userId.toString() === currentUserId}
-                  isGroup={selectedChat.type === "group"}
-                  senderName={message.senderName}
-                  senderPhoto={selectedChat.photo}
-                  status={message.status}
-                  attachment={message.attachments?.[0]}
-                  replyTo={
-                    message.parentMessageId
-                      ? {
-                          messageId: message.parentMessageId,
-                          text: message.parentMessageText || "",
-                          senderName: message.senderName,
-                        }
-                      : undefined
+              {messages.map((message) => {
+                const processedAttachments = processAttachments(
+                  message.attachments || []
+                );
+                const parentMessage = message.parentMessageId
+                  ? messages.find(
+                      (m) => m.messageId === message.parentMessageId
+                    )
+                  : null;
+
+                const parentAttachments = parentMessage
+                  ? processAttachments(parentMessage.attachments || [])
+                  : [];
+
+                // Helper function to get sender name from userId
+                const getSenderName = (userId: number, fallbackName?: string) => {
+                  if (userId.toString() === currentUserId) {
+                    return "You";
                   }
-                  onReply={() => handleReplyToMessage(message)}
-                  data-message-id={message.messageId}
-                />
-              ))}
+                  // Map userId to user info if available
+                  const user = users.find(u => u.id === userId.toString());
+                  return user?.name || fallbackName || selectedChat.name || "User";
+                };
+
+                return (
+                  <Message
+                    key={message.messageId}
+                    id={message.messageId}
+                    text={message.message}
+                    timestamp={message.date}
+                    isOwn={message.userId.toString() === currentUserId}
+                    isGroup={selectedChat.type === "group"}
+                    senderName={getSenderName(message.userId, message.senderName)}
+                    senderPhoto={selectedChat.photo}
+                    status={message.status}
+                    attachment={processedAttachments[0]}
+                    attachments={processedAttachments}
+                    replyTo={
+                      message.parentMessageId && parentMessage
+                        ? {
+                            messageId: message.parentMessageId,
+                            text:
+                              message.parentMessageText ||
+                              parentMessage.message ||
+                              "",
+                            senderName: getSenderName(parentMessage.userId, parentMessage.senderName),
+                            attachments: parentAttachments,
+                          }
+                        : undefined
+                    }
+                    onReply={() => handleReplyToMessage(message)}
+                    data-message-id={message.messageId}
+                  />
+                );
+              })}
 
               {isLoadingNext && (
                 <div className="flex justify-center py-4">

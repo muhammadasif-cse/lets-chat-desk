@@ -13,7 +13,7 @@ const baseQuery = fetchBaseQuery({
     import.meta.env.VITE_API_HOST
   }`,
 
-  prepareHeaders: (headers) => {
+  prepareHeaders: (headers, { endpoint, type }) => {
     const auth = userCookies.getUserData();
     headers.set("ngrok-skip-browser-warning", "true");
 
@@ -26,7 +26,14 @@ const baseQuery = fetchBaseQuery({
       );
     }
 
-    headers.set("Content-Type", "application/json");
+    // Don't set Content-Type for FormData requests - let browser handle it
+    // Check if this is a file upload by looking for FormData in the body
+    const isFormDataRequest = type === 'mutation' && endpoint === 'uploadChatFile';
+    
+    if (!isFormDataRequest) {
+      headers.set("Content-Type", "application/json");
+    }
+    
     return headers;
   },
 });

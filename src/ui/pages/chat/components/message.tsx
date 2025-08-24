@@ -5,6 +5,7 @@ import { renderAttachment } from "../utils/render-attachment";
 import { renderMessage } from "../utils/render-message";
 import { renderReply } from "../utils/render-reply";
 import { formatTime } from "../utils/time-formatting";
+import { MediaPreviewModal } from "./media-preview-modal";
 import MessageOption from "./message-option";
 import MessageReaction from "./message-reaction";
 
@@ -18,11 +19,28 @@ const Message: React.FC<IMessageProps> = ({
   senderPhoto,
   status = "sent",
   attachment,
+  attachments = [],
   replyTo,
   onReply,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isOpenReaction, setIsOpenReaction] = useState(false);
+  const [isMediaPreviewOpen, setIsMediaPreviewOpen] = useState(false);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+
+  // Use attachments array if available, otherwise fall back to single attachment
+  const messageAttachments =
+    attachments.length > 0 ? attachments : attachment ? [attachment] : [];
+
+  // Filter media attachments for preview (images and videos)
+  const mediaAttachments = messageAttachments.filter(
+    (att) => att && (att.type === "image" || att.type === "video")
+  );
+
+  const handleMediaPreview = (index: number) => {
+    setSelectedMediaIndex(index);
+    setIsMediaPreviewOpen(true);
+  };
 
   return (
     <div
@@ -78,18 +96,29 @@ const Message: React.FC<IMessageProps> = ({
                   }
                 : undefined,
               isOwn,
+              attachments: replyTo?.attachments || [],
             })}
-            {attachment
-              ? renderAttachment({
-                  attachment: {
-                    type: attachment.type,
-                    url: attachment.url || attachment.filePath || "",
-                    name: attachment.fileName,
-                    size: attachment.size,
-                    duration: attachment.duration,
-                  },
-                })
-              : null}
+
+            {/* Render all attachments */}
+            {messageAttachments.map((att, index) =>
+              att && att.type
+                ? renderAttachment({
+                    attachment: {
+                      type: att.type,
+                      url: att.url || att.filePath || "",
+                      name: att.fileName,
+                      size: att.size,
+                      duration: att.duration,
+                      fileId: att.fileId,
+                    },
+                    onPreview:
+                      att.type === "image" || att.type === "video"
+                        ? () => handleMediaPreview(index)
+                        : undefined,
+                  })
+                : null
+            )}
+
             <div className="flex items-end gap-3">
               {text && (
                 <div className="text-light text-sm leading-5 break-words">
@@ -140,6 +169,25 @@ const Message: React.FC<IMessageProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Media Preview Modal */}
+      {isMediaPreviewOpen && mediaAttachments.length > 0 && (
+        <MediaPreviewModal
+          attachments={mediaAttachments.map((att) => ({
+            id: att.fileId || "",
+            type: att.type as "image" | "video",
+            url: att.url || att.filePath || "",
+            name: att.fileName || "",
+            size: att.size,
+            fileId: att.fileId,
+            filePath: att.filePath || att.url || "",
+            fileName: att.fileName || "",
+          }))}
+          initialIndex={selectedMediaIndex}
+          isOpen={isMediaPreviewOpen}
+          onClose={() => setIsMediaPreviewOpen(false)}
+        />
+      )}
     </div>
   );
 };

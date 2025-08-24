@@ -1,6 +1,6 @@
 import { IChatItem } from "@/interfaces/chat";
 import { useAppSelector } from "@/redux/selector";
-import { setRecentUsers } from "@/redux/store/actions";
+import { setUpdateRecentUsers } from "@/redux/store/actions";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
 
@@ -59,26 +59,31 @@ export const useSignalREvent = (
       processedMessageIds.current.add(res.messageId);
 
       const chatId = res.type === "group" ? res.groupId : res.userId.toString();
-      const chatName = res.type === "group" ? res.groupName : res.senderName;
 
       const updatedRecentUsers = [...recentUsers];
       const existingUserIndex = updatedRecentUsers.findIndex(
         (user) => user.id === chatId
       );
 
+      const isOwnMessage =
+        res.userId === authUserId || res.senderId === authUserId;
+
       const recentUserUpdate: IChatItem = {
         id: chatId,
-        name: chatName || "",
+        name: res.userName || "",
         photo: res.photo || "",
         description: res.description || "",
         type: res.type || "user",
         lastMessage: res.message || "",
         lastMessageId: res.messageId || "",
         lastMessageDate: res.date || new Date().toISOString(),
-        unreadCount:
-          existingUserIndex >= 0
-            ? updatedRecentUsers[existingUserIndex].unreadCount + 1
-            : 1,
+        unreadCount: isOwnMessage
+          ? existingUserIndex >= 0
+            ? updatedRecentUsers[existingUserIndex].unreadCount
+            : 0
+          : existingUserIndex >= 0
+          ? updatedRecentUsers[existingUserIndex].unreadCount + 1
+          : 1,
         isAdmin: res.isAdmin || false,
         isEditGroupSettings: res.isEditGroupSettings || false,
         isSendMessages: res.isSendMessages || true,
@@ -86,15 +91,7 @@ export const useSignalREvent = (
         hasDeleteRequest: res.hasDeleteRequest || false,
       };
 
-      if (existingUserIndex >= 0) {
-        updatedRecentUsers[existingUserIndex] = recentUserUpdate;
-        const [updatedUser] = updatedRecentUsers.splice(existingUserIndex, 1);
-        updatedRecentUsers.unshift(updatedUser);
-      } else {
-        updatedRecentUsers.unshift(recentUserUpdate);
-      }
-
-      dispatch(setRecentUsers(updatedRecentUsers));
+      dispatch(setUpdateRecentUsers(recentUserUpdate));
     },
     [authUserId, dispatch, selectedChatId, recentUsers]
   );

@@ -25,7 +25,19 @@ export const ChatMutations = apiTag.injectEndpoints({
         method: EAPI_METHODS.GET,
       }),
     }),
+
+    uploadChatFile: builder.mutation({
+      query: (data: FormData) => ({
+        url: API_ENDPOINTS.UPLOAD_CHAT_ATTACHMENT,
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
-export const { useGetRecentUsersMutation, useGetChatsMutation } = ChatMutations;
+export const { 
+  useGetRecentUsersMutation, 
+  useGetChatsMutation,
+  useUploadChatFileMutation
+} = ChatMutations;

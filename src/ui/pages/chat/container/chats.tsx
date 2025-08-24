@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import useAuth from "@/ui/hooks/useAuth";
 import useChat from "@/ui/hooks/useChats";
 import {
   IChatItem,
@@ -17,6 +18,7 @@ interface ChatsProps {
 }
 
 const Chats = ({ selectedUser, signalR }: ChatsProps) => {
+  const { user } = useAuth();
   const {
     chats,
     currentCallCount,
@@ -42,7 +44,7 @@ const Chats = ({ selectedUser, signalR }: ChatsProps) => {
   initializeChatRef.current = initializeChat;
   clearChatRef.current = clearChat;
 
-  const currentUserId = 1;
+  const currentUserId = user?.userId || 1;
 
   useEffect(() => {
     if (selectedUser) {

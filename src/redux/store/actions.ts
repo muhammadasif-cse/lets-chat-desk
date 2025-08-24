@@ -11,6 +11,14 @@ export const chatSlice = createSlice({
     setRecentUsers: (state, action: PayloadAction<IChatItem[]>) => {
       state.recentUsers = action.payload;
     },
+    setUpdateRecentUsers: (state, action: PayloadAction<IChatItem>) => {
+      const index = state.recentUsers.findIndex(
+        (user) => user.id === action.payload.id
+      );
+      if (index !== -1) {
+        state.recentUsers[index] = action.payload;
+      }
+    },
     setPermissions: (state, action: PayloadAction<TChatPermissions[]>) => {
       state.permissions = action.payload;
     },
@@ -85,11 +93,23 @@ export const chatSlice = createSlice({
         message.status = action.payload.status;
       }
     },
+    updateMessageAttachments: (
+      state,
+      action: PayloadAction<{ messageId: string; attachments: IMessage["attachments"] }>
+    ) => {
+      const message = state.chats.find(
+        (msg) => msg.messageId === action.payload.messageId
+      );
+      if (message) {
+        message.attachments = action.payload.attachments;
+      }
+    },
   },
 });
 
 export const {
   setRecentUsers,
+  setUpdateRecentUsers,
   setPermissions,
   setSearchQuery,
   setChats,
@@ -105,6 +125,7 @@ export const {
   resetChatState,
   addOptimisticMessage,
   updateMessageStatus,
+  updateMessageAttachments,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;
