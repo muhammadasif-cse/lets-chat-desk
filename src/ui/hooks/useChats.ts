@@ -4,14 +4,11 @@ import { toast } from "sonner";
 import { CHAT_CONFIG } from "../../constants/app.constants";
 import {
   IChatItem,
-  IGetChatsRequest,
-  IMessage,
-  ISendMessageData,
+  IGetChatsRequest
 } from "../../interfaces/chat";
 import { RootState } from "../../redux/store";
 import {
   addLoadedCallCount,
-  addOptimisticMessage,
   appendNextChats,
   appendPreviousChats,
   resetChatState,
@@ -21,8 +18,7 @@ import {
   setHasMoreNext,
   setHasMorePrevious,
   setIsLoadingMessages,
-  setSelectedChatId,
-  updateMessageStatus,
+  setSelectedChatId
 } from "../../redux/store/actions";
 import { useGetChatsMutation } from "../../redux/store/mutations";
 
@@ -155,66 +151,6 @@ export const useChat = () => {
     [loadChats, loadedCallCounts, isLoadingMessages]
   );
 
-  const sendMessage = useCallback(
-    async (
-      messageData: ISendMessageData,
-      chatId: string,
-      userId: number,
-      chatType: "user" | "group"
-    ) => {
-      const optimisticMessage: IMessage = {
-        messageId: `temp-${Date.now()}`,
-        message: messageData.text,
-        date: new Date().toISOString(),
-        senderName: "You",
-        userId,
-        toUserId: chatType === "user" ? parseInt(chatId) : 0,
-        status: "sending",
-        type: chatType,
-        isApprovalNeeded: false,
-        isNotification: false,
-        parentMessageId: messageData.replyTo?.messageId || null,
-        parentMessageText: messageData.replyTo?.text || null,
-        reactions: [],
-        attachments: messageData.attachments || [],
-        eligibleUsers: null,
-        deleteRequestedAt: null,
-      };
-
-      dispatch(addOptimisticMessage(optimisticMessage));
-
-      try {
-        const response = await fetch("/api/messages/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...messageData,
-            chatId,
-            userId,
-            chatType,
-          }),
-        });
-
-        if (!response.ok) throw new Error("Failed to send message");
-        dispatch(
-          updateMessageStatus({
-            messageId: optimisticMessage.messageId,
-            status: "sent",
-          })
-        );
-      } catch (error) {
-        dispatch(
-          updateMessageStatus({
-            messageId: optimisticMessage.messageId,
-            status: "failed",
-          })
-        );
-        toast.error("Failed to send message");
-      }
-    },
-    [dispatch]
-  );
-
   const clearChat = useCallback(() => {
     dispatch(resetChatState());
     dispatch(setSelectedChatId(null));
@@ -236,7 +172,6 @@ export const useChat = () => {
     initializeChat,
     loadPreviousMessages,
     loadNextMessages,
-    sendMessage,
     clearChat,
   };
 };

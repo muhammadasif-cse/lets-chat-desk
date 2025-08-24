@@ -1,3 +1,6 @@
+import { IChatItem } from "@/interfaces/chat";
+import { useAppSelector } from "@/redux/selector";
+import { setRecentUsers } from "@/redux/store/actions";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
 
@@ -8,6 +11,7 @@ export const useSignalREvent = (
   selectedChatId?: string | null
 ) => {
   const dispatch = useDispatch();
+  const { recentUsers } = useAppSelector((state) => state.chat);
   const processedMessageIds = useRef(new Set<string>());
   const processedApprovalIds = useRef(new Set<string>());
   const processedReplyIds = useRef(new Set<string>());
@@ -39,12 +43,60 @@ export const useSignalREvent = (
     return () => clearInterval(interval);
   }, [clearOldEntries]);
 
-  //* handle incoming messages
+  //* receive messages
   const receiveMessage = useCallback(
     async (res: any) => {
-      console.log("🚀 ~ useSignalREvent ~ res:", res);
+      console.log("🚀 ~ useSignalREvent ~ receiveMessage:", res);
+
+      if (!res || !res.messageId) {
+        console.warn("Invalid message received:", res);
+        return;
+      }
+      if (processedMessageIds.current.has(res.messageId)) {
+        console.log("Duplicate message detected, skipping:", res.messageId);
+        return;
+      }
+      processedMessageIds.current.add(res.messageId);
+
+      const chatId = res.type === "group" ? res.groupId : res.userId.toString();
+      const chatName = res.type === "group" ? res.groupName : res.senderName;
+
+      const updatedRecentUsers = [...recentUsers];
+      const existingUserIndex = updatedRecentUsers.findIndex(
+        (user) => user.id === chatId
+      );
+
+      const recentUserUpdate: IChatItem = {
+        id: chatId,
+        name: chatName || "",
+        photo: res.photo || "",
+        description: res.description || "",
+        type: res.type || "user",
+        lastMessage: res.message || "",
+        lastMessageId: res.messageId || "",
+        lastMessageDate: res.date || new Date().toISOString(),
+        unreadCount:
+          existingUserIndex >= 0
+            ? updatedRecentUsers[existingUserIndex].unreadCount + 1
+            : 1,
+        isAdmin: res.isAdmin || false,
+        isEditGroupSettings: res.isEditGroupSettings || false,
+        isSendMessages: res.isSendMessages || true,
+        isAddMembers: res.isAddMembers || false,
+        hasDeleteRequest: res.hasDeleteRequest || false,
+      };
+
+      if (existingUserIndex >= 0) {
+        updatedRecentUsers[existingUserIndex] = recentUserUpdate;
+        const [updatedUser] = updatedRecentUsers.splice(existingUserIndex, 1);
+        updatedRecentUsers.unshift(updatedUser);
+      } else {
+        updatedRecentUsers.unshift(recentUserUpdate);
+      }
+
+      dispatch(setRecentUsers(updatedRecentUsers));
     },
-    [authUserId, dispatch]
+    [authUserId, dispatch, selectedChatId, recentUsers]
   );
 
   //   //! typing status handler

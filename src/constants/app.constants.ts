@@ -17,16 +17,19 @@ export const API_CONFIG = {
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  GET_CHATS: '/chatservice/chats/GetChats',
-  GET_RECENT_CHAT: '/chatservice/chats/GetRecentChat',
-  SEND_MESSAGE: '/chatservice/chats/SendMessage',
+  GET_CHATS: "/chatservice/chats/GetChats",
+  GET_RECENT_CHAT: "/chatservice/chats/GetRecentChat",
 } as const;
 
 // File upload constants
 export const FILE_CONFIG = {
   MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
-  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  ALLOWED_DOCUMENT_TYPES: ['application/pdf', 'application/msword', 'text/plain'],
+  ALLOWED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+  ALLOWED_DOCUMENT_TYPES: [
+    "application/pdf",
+    "application/msword",
+    "text/plain",
+  ],
 } as const;
 
 // UI constants
@@ -42,6 +45,6 @@ export const UI_CONFIG = {
 export const ENV_CONFIG = {
   IS_DEVELOPMENT: import.meta.env.DEV,
   IS_PRODUCTION: import.meta.env.PROD,
-  API_BASE_URL: import.meta.env.VITE_API_GATEWAY_URL || 'localhost:3000',
-  SOCKET_URL: import.meta.env.VITE_API_HUB_URL || 'ws://localhost:3000',
+  API_BASE_URL: import.meta.env.VITE_API_GATEWAY_URL || "localhost:3000",
+  SOCKET_URL: import.meta.env.VITE_API_HUB_URL || "ws://localhost:3000",
 } as const;

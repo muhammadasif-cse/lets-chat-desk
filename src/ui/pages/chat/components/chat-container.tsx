@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 import { useDispatch } from "react-redux";
 import { useInfiniteScroll } from "../../../../hooks/use-infinite-scroll";
@@ -167,8 +168,31 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   );
 
   const handleSendMessage = (messageData: ISendMessageData) => {
+    if (!selectedChat) {
+      console.error("No selected chat found");
+      return;
+    }
+
+    const tempId = uuidv4();
+    const isGroup = selectedChat.type === "group";
+
+    const reqBody = {
+      messageId: tempId,
+      userId: isGroup ? null : parseInt(selectedChat.id),
+      toUserId: isGroup ? null : parseInt(selectedChat.id),
+      groupId: isGroup ? selectedChat.id : null,
+      message: messageData.text,
+      text: messageData.text,
+      type: selectedChat.type,
+      attachments: messageData.attachments || [],
+      isApprovalNeeded: Boolean(messageData?.isApprovalNeeded),
+      eligibleUsers: (selectedChat as any)?.eligibleUsers || [],
+      parentMessageId: replyTo?.messageId || null,
+      parentMessageText: replyTo?.text || null,
+    };
+
     if (onSendMessage) {
-      onSendMessage(messageData);
+      onSendMessage(reqBody as any);
     }
     setReplyTo(null);
     shouldAutoScroll.current = true;
@@ -270,7 +294,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                       ? {
                           messageId: message.parentMessageId,
                           text: message.parentMessageText || "",
-                          senderName: "Unknown",
+                          senderName: message.senderName,
                         }
                       : undefined
                   }

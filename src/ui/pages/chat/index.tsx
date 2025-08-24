@@ -39,7 +39,7 @@ const Index = () => {
           className="h-full flex flex-col"
         >
           {selectedUser ? (
-            <Chats selectedUser={selectedUser} />
+            <Chats selectedUser={selectedUser} signalR={signalR} />
           ) : (
             <WelcomeScreen />
           )}

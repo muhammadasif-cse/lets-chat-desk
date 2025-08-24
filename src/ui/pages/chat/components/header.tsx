@@ -51,9 +51,14 @@ const Header = ({
 
   const getStatusText = () => {
     if (isGroup) {
-      return selectedChat.memberCount
-        ? `${selectedChat.memberCount} members`
-        : "Group";
+      if (selectedChat.memberCount && selectedChat.totalOnline) {
+        return `${selectedChat.memberCount} members, ${selectedChat.totalOnline} online`;
+      } else if (selectedChat.memberCount) {
+        return `${selectedChat.memberCount} members`;
+      } else if (selectedChat.totalOnline) {
+        return `${selectedChat.totalOnline} online`;
+      }
+      return "Group";
     }
 
     if (selectedChat.isOnline) {

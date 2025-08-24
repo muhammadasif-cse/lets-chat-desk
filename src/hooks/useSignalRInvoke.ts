@@ -1,10 +1,13 @@
+import { IMessage } from "@/interfaces/chat";
 import { ISignalRProps } from "@/interfaces/signalR";
 import { useAppSelector } from "@/redux/selector";
-import { updateMessageStatus } from "@/redux/store/actions";
+import {
+    addOptimisticMessage,
+    updateMessageStatus,
+} from "@/redux/store/actions";
 import * as signalR from "@microsoft/signalr";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { v4 as uuidv4 } from "uuid";
 import { useSignalR } from "./useSignalR";
 import { useSignalREvent } from "./useSignalREvent";
 
@@ -90,32 +93,80 @@ export const useSignalRInvoke = (): ISignalRProps => {
 
   //! send message
   const sendMessage = useCallback(
-    async (message: any) => {
-      const tempId = uuidv4();
-      const isGroup = message.type === "group";
-
+    async (messageData: any) => {
+      const isGroup = messageData.type === "group";
       const reqBody = {
-        ...message,
-        messageId: tempId,
-        senderId: authUserId,
-        timestamp: new Date().toISOString(),
+        messageId: messageData.messageId,
+        userId: parseInt(
+          messageData.userId?.toString() ?? authUserId.toString()
+        ),
+        toUserId: parseInt(messageData.toUserId?.toString() ?? "0"),
+        groupId: isGroup ? messageData.groupId : null,
+        message: messageData.message || messageData.text,
+        type: messageData.type,
+        attachments: messageData.attachments || [],
+        isApprovalNeeded: Boolean(messageData?.isApprovalNeeded),
+        eligibleUsers: messageData.eligibleUsers || [],
+        parentMessageId: messageData.parentMessageId || null,
+        parentMessageText: messageData.parentMessageText || null,
       };
+
+      const optimisticMessage: IMessage = {
+        messageId: messageData.messageId,
+        parentMessageId: messageData.parentMessageId || null,
+        parentMessageText: messageData.parentMessageText || null,
+        date: new Date().toISOString(),
+        message: messageData.message || messageData.text,
+        senderName: user?.fullName || user?.userName || "",
+        toUserId: messageData.toUserId,
+        userId: authUserId,
+        status: "sending" as const,
+        type: messageData.type as "user" | "group",
+        isApprovalNeeded: messageData.isApprovalNeeded || false,
+        attachments: messageData.attachments || [],
+        eligibleUsers: messageData.eligibleUsers || null,
+      };
+
+      dispatch(addOptimisticMessage(optimisticMessage));
 
       if (!checkConnection()) {
         console.warn("Cannot send message: not connected - queuing message");
-        dispatch(updateMessageStatus({ messageId: tempId, status: "queued" }));
+        dispatch(
+          updateMessageStatus({
+            messageId: messageData.messageId,
+            status: "queued",
+          })
+        );
         return;
       }
 
       try {
-        await connection?.invoke("SendMessage", { ...reqBody });
-        dispatch(updateMessageStatus({ messageId: tempId, status: "sent" }));
+        await connection?.invoke("SendMessage", reqBody);
+        console.log("🚀 ~ useSignalRInvoke ~ reqBody sent:", reqBody);
+        dispatch(
+          updateMessageStatus({
+            messageId: reqBody.messageId,
+            status: "sent",
+          })
+        );
       } catch (error) {
         console.error("Send message error:", error);
-        dispatch(updateMessageStatus({ messageId: tempId, status: "failed" }));
+        dispatch(
+          updateMessageStatus({
+            messageId: reqBody.messageId,
+            status: "failed",
+          })
+        );
       }
     },
-    [connection, dispatch, checkConnection]
+    [
+      connection,
+      dispatch,
+      checkConnection,
+      authUserId,
+      user?.fullName,
+      user?.userName,
+    ]
   );
 
   //   const setModifyMessage = useCallback(
@@ -193,9 +244,7 @@ export const useSignalRInvoke = (): ISignalRProps => {
       reconnect,
       forceReconnect,
       checkConnection,
-      sendMessage: async () => {
-        throw new Error("sendMessage not implemented");
-      },
+      sendMessage,
       markMultipleMessageAsSeen: async () => {
         throw new Error("markMultipleMessageAsSeen not implemented");
       },

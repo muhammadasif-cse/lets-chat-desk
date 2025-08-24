@@ -13,9 +13,10 @@ import Loading from "../utils/loading";
 
 interface ChatsProps {
   selectedUser?: IChatItem;
+  signalR: any;
 }
 
-const Chats = ({ selectedUser }: ChatsProps) => {
+const Chats = ({ selectedUser, signalR }: ChatsProps) => {
   const {
     chats,
     currentCallCount,
@@ -26,7 +27,6 @@ const Chats = ({ selectedUser }: ChatsProps) => {
     initializeChat,
     loadPreviousMessages,
     loadNextMessages,
-    sendMessage,
     clearChat,
   } = useChat();
 
@@ -38,7 +38,6 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
   const initializeChatRef = useRef(initializeChat);
   const clearChatRef = useRef(clearChat);
-  const lastSelectedUserRef = useRef<IChatItem | undefined>(undefined);
 
   initializeChatRef.current = initializeChat;
   clearChatRef.current = clearChat;
@@ -47,25 +46,26 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
   useEffect(() => {
     if (selectedUser) {
-      if (
-        lastSelectedUserRef.current &&
-        lastSelectedUserRef.current.id === selectedUser.id &&
-        lastSelectedUserRef.current.type === selectedUser.type
-      ) {
-        return;
-      }
-
-      lastSelectedUserRef.current = selectedUser;
-      clearChatRef.current();
-
       const chat: ISelectedChat = {
         id: selectedUser.id,
         name: selectedUser.name,
         photo: selectedUser.photo,
         type: selectedUser.type,
         isOnline: selectedUser.type === "user" ? true : false,
-        memberCount: selectedUser.type === "group" ? 0 : undefined,
+        memberCount:
+          selectedUser.type === "group" ? selectedUser.memberCount : undefined,
+        lastMessage: selectedUser.lastMessage,
+        lastMessageId: selectedUser.lastMessageId,
+        lastMessageDate: selectedUser.lastMessageDate,
+        unreadCount: selectedUser.unreadCount,
+        isAdmin: selectedUser.isAdmin,
+        isEditGroupSettings: selectedUser.isEditGroupSettings,
+        isSendMessages: selectedUser.isSendMessages,
+        isAddMembers: selectedUser.isAddMembers,
+        hasDeleteRequest: selectedUser.hasDeleteRequest,
       };
+      console.log("🚀 ~ Chats ~ chat:", chat);
+
       setSelectedChat(chat);
 
       const requestParams: IGetChatsRequest = {
@@ -76,8 +76,6 @@ const Chats = ({ selectedUser }: ChatsProps) => {
         type: selectedUser.type,
         callCount: 0,
       };
-
-      // Store chat params for pagination
       setChatParams({
         groupId: requestParams.groupId,
         toUserId: requestParams.toUserId,
@@ -87,7 +85,6 @@ const Chats = ({ selectedUser }: ChatsProps) => {
 
       initializeChatRef.current(selectedUser, currentUserId);
     } else {
-      lastSelectedUserRef.current = undefined;
       clearChatRef.current();
       setSelectedChat(null);
       setChatParams(null);
@@ -107,19 +104,20 @@ const Chats = ({ selectedUser }: ChatsProps) => {
   const handleSendMessage = (messageData: ISendMessageData) => {
     if (!selectedChat) return;
 
-    sendMessage(messageData, selectedChat.id, currentUserId, selectedChat.type);
+    signalR.sendMessage(
+      messageData,
+      selectedChat.id,
+      currentUserId,
+      selectedChat.type
+    );
   };
 
   if (!selectedChat) {
     return (
       <div className="h-full flex items-center justify-center bg-foreground">
         <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            No chat selected
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400">
-            Select a conversation to start chatting
-          </p>
+          <h3 className="text-lg font-medium text-gray2">No chat selected</h3>
+          <p className="text-gray">Select a conversation to start chatting</p>
         </div>
       </div>
     );

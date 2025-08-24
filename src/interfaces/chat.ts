@@ -18,10 +18,8 @@ export interface IMessage {
   isRejected?: boolean;
   isNotification?: boolean;
   eligibleUsers?: number[] | null;
-  reactions: IMessageReaction[];
   attachments: IMessageAttachment[];
 }
-
 
 export interface IMessageAttachment {
   type: "image" | "video" | "audio" | "document";
@@ -30,19 +28,6 @@ export interface IMessageAttachment {
   url?: string;
   size?: string;
   duration?: string;
-}
-
-export interface IMessageReaction {
-  reaction: string;
-  count: number;
-  users: IMessageReactionUser[];
-}
-
-export interface IMessageReactionUser {
-  userId: number;
-  userName: string;
-  name: string;
-  photo: string;
 }
 
 export interface IMessageReply {
@@ -59,12 +44,12 @@ export interface IMessageMention {
   endIndex: number;
 }
 
-
 export interface IChatItem {
   id: string;
   name: string;
   photo: string;
   description: string;
+  memberCount?: number | undefined;
   type: "user" | "group";
   lastMessage: string;
   lastMessageId: string;
@@ -77,18 +62,30 @@ export interface IChatItem {
   hasDeleteRequest: boolean;
 }
 
-
 export interface ISelectedChat {
   id: string;
   name: string;
   photo?: string;
+  description?: string;
+  lastMessage: string;
+  lastMessageId: string;
+  lastMessageDate: string;
   type: "user" | "group";
   isOnline?: boolean;
   lastSeen?: string;
   memberCount?: number;
   totalOnline?: number;
+  unreadCount?: number;
+  isAdmin?: boolean;
+  isEditGroupSettings?: boolean;
+  isSendMessages?: boolean;
+  isAddMembers?: boolean;
+  hasDeleteRequest?: boolean;
+  eligibleUsers?: number[] | null;
+  parentMessageId?: string | null;
+  parentMessageText?: string | null;
+  isApprovalNeeded?: boolean;
 }
-
 
 export interface IChatUser {
   id: string;
@@ -101,13 +98,12 @@ export interface IChatUser {
   lastSeen?: string;
 }
 
-
 export interface ISendMessageData {
   text: string;
   replyTo?: IMessageReply;
   attachments?: IMessageAttachment[];
+  isApprovalNeeded?: boolean;
 }
-
 
 export interface IGetChatsRequest {
   groupId?: string | null;
