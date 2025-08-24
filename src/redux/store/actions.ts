@@ -16,7 +16,32 @@ export const chatSlice = createSlice({
         (user) => user.id === action.payload.id
       );
       if (index !== -1) {
+        // Update existing user
         state.recentUsers[index] = action.payload;
+        // Move to top if it's not already at the top
+        if (index !== 0) {
+          const [updatedUser] = state.recentUsers.splice(index, 1);
+          state.recentUsers.unshift(updatedUser);
+        }
+      } else {
+        // Add new user at the top
+        state.recentUsers.unshift(action.payload);
+      }
+    },
+    addOrUpdateRecentUser: (state, action: PayloadAction<IChatItem>) => {
+      const index = state.recentUsers.findIndex(
+        (user) => user.id === action.payload.id
+      );
+      if (index !== -1) {
+        // Update existing user and move to top
+        state.recentUsers[index] = action.payload;
+        if (index !== 0) {
+          const [updatedUser] = state.recentUsers.splice(index, 1);
+          state.recentUsers.unshift(updatedUser);
+        }
+      } else {
+        // Add new user at the top
+        state.recentUsers.unshift(action.payload);
       }
     },
     setPermissions: (state, action: PayloadAction<TChatPermissions[]>) => {
@@ -132,6 +157,7 @@ export const chatSlice = createSlice({
 export const {
   setRecentUsers,
   setUpdateRecentUsers,
+  addOrUpdateRecentUser,
   setPermissions,
   setSearchQuery,
   setChats,

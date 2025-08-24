@@ -1,4 +1,5 @@
 import { Toaster } from "sonner";
+import useNotificationPermission from "../hooks/useNotificationPermission";
 import ReduxProvider from "../redux/redux-provider";
 import AuthGuard from "./components/auth-guard";
 import ErrorBoundary from "./components/error-boundary";
@@ -8,6 +9,7 @@ import Index from "./pages/chat";
 
 function AppInner() {
   const { isAuthenticated } = useAuth();
+  useNotificationPermission();
 
   return (
     <AuthGuard requireAuth={false}>

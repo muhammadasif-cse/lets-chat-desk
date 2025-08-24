@@ -1,12 +1,13 @@
-import { IChatItem } from "@/interfaces/chat";
+import { IChatItem, IMessage } from "@/interfaces/chat";
 import { useAppSelector } from "@/redux/selector";
 import {
     addOptimisticMessage,
+    addOrUpdateRecentUser,
     setTypingStatus,
-    setUpdateRecentUsers,
 } from "@/redux/store/actions";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
+import notificationManager from "../lib/notification-manager";
 
 export const useSignalREvent = (
   authUserId: number,
@@ -63,14 +64,34 @@ export const useSignalREvent = (
       processedMessageIds.current.add(res.messageId);
 
       const chatId = res.type === "group" ? res.groupId : res.userId.toString();
-
-      const updatedRecentUsers = [...recentUsers];
-      const existingUserIndex = updatedRecentUsers.findIndex(
-        (user) => user.id === chatId
-      );
-
       const isOwnMessage =
         res.userId === authUserId || res.senderId === authUserId;
+
+      const messageForChat: IMessage = {
+        messageId: res.messageId,
+        parentMessageId: res.parentMessageId || null,
+        parentMessageText: res.parentMessageText || null,
+        date: res.date || new Date().toISOString(),
+        message: res.message || "",
+        senderName: res.userName || "",
+        toUserId: res.toUserId || 0,
+        userId: res.userId,
+        status: "sent",
+        type: res.type || "user",
+        isApprovalNeeded: res.isApprovalNeeded || false,
+        isApproved: res.isApproved || false,
+        isDeleteRequest: res.isDeleteRequest || false,
+        deleteRequestedAt: res.deleteRequestedAt || null,
+        isRejected: res.isRejected || false,
+        isNotification: res.isNotification || false,
+        eligibleUsers: res.eligibleUsers || null,
+        attachments: res.attachments || [],
+      };
+
+      if (chatId === selectedChatId) {
+        console.log("📨 Adding message to current chat:", messageForChat);
+        dispatch(addOptimisticMessage(messageForChat));
+      }
 
       const recentUserUpdate: IChatItem = {
         id: chatId,
@@ -82,22 +103,43 @@ export const useSignalREvent = (
         lastMessageId: res.messageId || "",
         lastMessageDate: res.date || new Date().toISOString(),
         unreadCount: isOwnMessage
-          ? existingUserIndex >= 0
-            ? updatedRecentUsers[existingUserIndex].unreadCount
-            : 0
-          : existingUserIndex >= 0
-          ? updatedRecentUsers[existingUserIndex].unreadCount + 1
-          : 1,
+          ? 0
+          : chatId === selectedChatId
+          ? 0
+          : (() => {
+              const existingUser = recentUsers.find(
+                (user) => user.id === chatId
+              );
+              return (existingUser?.unreadCount || 0) + 1;
+            })(),
         isAdmin: res.isAdmin || false,
         isEditGroupSettings: res.isEditGroupSettings || false,
         isSendMessages: res.isSendMessages || true,
         isAddMembers: res.isAddMembers || false,
         hasDeleteRequest: res.hasDeleteRequest || false,
       };
+      dispatch(addOrUpdateRecentUser(recentUserUpdate));
 
-      dispatch(setUpdateRecentUsers(recentUserUpdate));
       if (!isOwnMessage) {
-        addOptimisticMessage(res);
+        try {
+          const isGroup = res.type === "group";
+          if (isGroup) {
+            await notificationManager.showMessageNotification(
+              res.userName || "Someone",
+              res.message || "New message",
+              true,
+              res.groupName || "Group Chat"
+            );
+          } else {
+            await notificationManager.showMessageNotification(
+              res.userName || "Someone",
+              res.message || "New message",
+              false
+            );
+          }
+        } catch (error) {
+          console.error("Failed to show notification:", error);
+        }
       }
     },
     [authUserId, dispatch, selectedChatId, recentUsers]

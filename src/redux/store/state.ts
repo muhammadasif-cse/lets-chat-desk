@@ -12,6 +12,7 @@ const initialState: TChatState = {
   isLoadingMessages: false,
   selectedChatId: null,
   error: null,
+  typingStatus: null,
 };
 
 export default initialState;
