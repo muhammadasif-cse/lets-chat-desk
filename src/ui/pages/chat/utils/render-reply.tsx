@@ -39,9 +39,9 @@ export const renderReply = ({
         isOwn ? "bg-dark2/50" : "bg-dark4/50"
       }`}
     >
-      <div className="text-green text-xs font-medium mb-1">
+      {/* <div className="text-green text-xs font-medium mb-1">
         {replyTo.senderName}
-      </div>
+      </div> */}
       <div className="text-gray2 text-xs leading-tight">
         {hasAttachments && !replyTo.text && (
           <div className="flex items-center gap-1 mb-1">

@@ -28,11 +28,9 @@ const Message: React.FC<IMessageProps> = ({
   const [isMediaPreviewOpen, setIsMediaPreviewOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 
-  // Use attachments array if available, otherwise fall back to single attachment
   const messageAttachments =
     attachments.length > 0 ? attachments : attachment ? [attachment] : [];
 
-  // Filter media attachments for preview (images and videos)
   const mediaAttachments = messageAttachments.filter(
     (att) => att && (att.type === "image" || att.type === "video")
   );
@@ -101,8 +99,9 @@ const Message: React.FC<IMessageProps> = ({
 
             {/* Render all attachments */}
             {messageAttachments.map((att, index) =>
-              att && att.type
-                ? renderAttachment({
+              att && att.type ? (
+                <div key={index}>
+                  {renderAttachment({
                     attachment: {
                       type: att.type,
                       url: att.url || att.filePath || "",
@@ -115,8 +114,9 @@ const Message: React.FC<IMessageProps> = ({
                       att.type === "image" || att.type === "video"
                         ? () => handleMediaPreview(index)
                         : undefined,
-                  })
-                : null
+                  })}
+                </div>
+              ) : null
             )}
 
             <div className="flex items-end gap-3">
@@ -170,7 +170,6 @@ const Message: React.FC<IMessageProps> = ({
         </div>
       </div>
 
-      {/* Media Preview Modal */}
       {isMediaPreviewOpen && mediaAttachments.length > 0 && (
         <MediaPreviewModal
           attachments={mediaAttachments.map((att) => ({

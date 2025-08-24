@@ -31,24 +31,50 @@ export const useDownloadFile = (): UseDownloadFileReturn => {
       const response = await fetch(
         `${baseUrl}/chatservice/chats/downloadAttachment?attachmentId=${fileId}`,
         {
-          method: "POST",
+          method: "GET", // Changed from POST to GET
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
         },
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+      }
+
+      // Get filename from Content-Disposition header if available
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let downloadFileName = fileName;
+      
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (fileNameMatch) {
+          downloadFileName = fileNameMatch[1].replace(/['"]/g, '');
+        }
       }
 
       const blob = await response.blob();
-      saveAs(blob, fileName || `downloaded_file_${fileId}`);
+      
+      // Fallback filename if none provided
+      if (!downloadFileName) {
+        const contentType = response.headers.get('Content-Type') || '';
+        const extension = contentType.includes('image') ? '.jpg' :
+                         contentType.includes('video') ? '.mp4' :
+                         contentType.includes('audio') ? '.mp3' :
+                         contentType.includes('pdf') ? '.pdf' : '';
+        downloadFileName = `attachment_${fileId}${extension}`;
+      }
+
+      saveAs(blob, downloadFileName);
+      
+      console.log(`Successfully downloaded: ${downloadFileName}`);
     } catch (error: any) {
       const errorMessage = error?.message || "Download failed";
       setError(errorMessage);
       console.error("Download error:", error);
+      
+      // Show user-friendly error message
+      alert(`Download failed: ${errorMessage}`);
     } finally {
       setLoadingFiles((prev) => {
         const newSet = new Set(prev);

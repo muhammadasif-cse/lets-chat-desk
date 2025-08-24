@@ -1,4 +1,9 @@
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon, XIcon } from "lucide-react";
+import {
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    DownloadIcon,
+    XIcon,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useDownloadFile } from "../../../../hooks/useDownloadFile";
 import { IMessageAttachment } from "../../../../interfaces/chat";
@@ -27,13 +32,17 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
 
   const goToPrevious = () => {
     if (canNavigate) {
-      setCurrentIndex((prev) => (prev === 0 ? attachments.length - 1 : prev - 1));
+      setCurrentIndex((prev) =>
+        prev === 0 ? attachments.length - 1 : prev - 1
+      );
     }
   };
 
   const goToNext = () => {
     if (canNavigate) {
-      setCurrentIndex((prev) => (prev === attachments.length - 1 ? 0 : prev + 1));
+      setCurrentIndex((prev) =>
+        prev === attachments.length - 1 ? 0 : prev + 1
+      );
     }
   };
 
@@ -77,20 +86,36 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
 
       default:
         return (
-          <div className="bg-dark3 rounded-lg p-8 text-center">
-            <div className="text-light text-lg mb-4">
-              {currentAttachment.fileName}
+          <div className="flex flex-col items-center justify-center text-white">
+            <div className="bg-dark3 p-6 rounded-full mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-16 w-16 text-green"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 6h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"
+                />
+              </svg>
             </div>
-            <div className="text-gray text-sm mb-4">
+            <div className="text-lg">{currentAttachment.fileName}</div>
+            <div className="text-sm text-gray-400">
               {currentAttachment.size || "Unknown size"}
             </div>
             <Button
               onClick={handleDownload}
               disabled={isFileLoading(currentAttachment.fileId || "")}
-              className="bg-green hover:bg-green/90"
+              className="bg-green hover:bg-green/90 mt-4"
             >
-              <DownloadIcon className="w-4 h-4 mr-2" />
-              {isFileLoading(currentAttachment.fileId || "") ? "Downloading..." : "Download"}
+              <DownloadIcon className="w-4 h-4 mr-2 text-white" />
+              {isFileLoading(currentAttachment.fileId || "")
+                ? "Downloading..."
+                : "Download"}
             </Button>
           </div>
         );
@@ -107,9 +132,9 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
         variant="ghost"
         size="sm"
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 bg-dark/50 hover:bg-dark text-white"
+        className="absolute top-4 right-4 z-10 bg-dark/50 hover:bg-dark"
       >
-        <XIcon className="w-6 h-6" />
+        <XIcon className="w-6 h-6 text-white" />
       </Button>
 
       {/* Download button */}
@@ -119,9 +144,13 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
           size="sm"
           onClick={handleDownload}
           disabled={isFileLoading(currentAttachment.fileId)}
-          className="absolute top-4 right-16 z-10 bg-dark/50 hover:bg-dark text-white"
+          className="absolute top-4 right-16 z-10 bg-dark/50 hover:bg-dark"
         >
-          <DownloadIcon className="w-5 h-5" />
+          {isFileLoading(currentAttachment.fileId) ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <DownloadIcon className="w-5 h-5 text-white" />
+          )}
         </Button>
       )}
 
@@ -131,9 +160,9 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
           variant="ghost"
           size="sm"
           onClick={goToPrevious}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-dark/50 hover:bg-dark text-white"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-dark/50 hover:bg-dark"
         >
-          <ChevronLeftIcon className="w-6 h-6" />
+          <ChevronLeftIcon className="w-6 h-6 text-white" />
         </Button>
       )}
 
@@ -143,9 +172,9 @@ export const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({
           variant="ghost"
           size="sm"
           onClick={goToNext}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-dark/50 hover:bg-dark text-white"
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-dark/50 hover:bg-dark"
         >
-          <ChevronRightIcon className="w-6 h-6" />
+          <ChevronRightIcon className="w-6 h-6 text-white" />
         </Button>
       )}
 
