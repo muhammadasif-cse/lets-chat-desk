@@ -31,7 +31,7 @@ export const useDownloadFile = (): UseDownloadFileReturn => {
       const response = await fetch(
         `${baseUrl}/chatservice/chats/downloadAttachment?attachmentId=${fileId}`,
         {
-          method: "GET", // Changed from POST to GET
+          method: "POST", 
           headers: {
             Authorization: `Bearer ${token}`,
           },
