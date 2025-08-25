@@ -28,6 +28,63 @@ const Message: React.FC<IMessageProps> = ({
   const [isMediaPreviewOpen, setIsMediaPreviewOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 
+  const getMessageTextColor = (message: any) => {
+    if (message?.isDeleteRequest) return "text-danger/30";
+    if (message?.isApprovalNeeded) {
+      if (message?.isApproved) return "text-green2"; 
+      if (message?.isRejected) return "text-danger"; 
+      return "text-yellow-400";
+    }
+    return "text-white";
+  };
+
+  // Message action handlers
+  const handleApprove = (messageId: string) => {
+    console.log("Approve message:", messageId);
+    // TODO: Implement approve logic
+  };
+
+  const handleReject = (messageId: string) => {
+    console.log("Reject message:", messageId);
+    // TODO: Implement reject logic
+  };
+
+  const handleSendForApproval = (messageId: string) => {
+    console.log("Send for approval:", messageId);
+    // TODO: Implement send for approval logic
+  };
+
+  const handleEdit = (messageId: string) => {
+    console.log("Edit message:", messageId);
+    // TODO: Implement edit logic
+  };
+
+  const handleDelete = (messageId: string) => {
+    console.log("Delete message:", messageId);
+    // TODO: Implement delete logic
+  };
+
+  const handleDeleteRequest = (messageId: string) => {
+    console.log("Delete request:", messageId);
+    // TODO: Implement delete request logic
+  };
+
+  const handleCancelDeleteRequest = (messageId: string) => {
+    console.log("Cancel delete request:", messageId);
+    // TODO: Implement cancel delete request logic
+  };
+
+  const handleInfo = (messageId: string) => {
+    console.log("Show message info:", messageId);
+    // TODO: Implement info logic
+  };
+
+  const handleCopy = (messageId: string) => {
+    console.log("Copy message:", messageId);
+    // TODO: Implement copy logic
+    navigator.clipboard.writeText(text);
+  };
+
   const messageAttachments =
     attachments.length > 0 ? attachments : attachment ? [attachment] : [];
 
@@ -121,7 +178,12 @@ const Message: React.FC<IMessageProps> = ({
 
             <div className="flex items-end gap-3">
               {text && (
-                <div className="text-light text-sm leading-5 break-words">
+                <div className={`text-sm leading-5 break-words ${getMessageTextColor({ 
+                  isApprovalNeeded: false,
+                  isApproved: false,      
+                  isRejected: false,      
+                  isDeleteRequest: false  
+                })}`}>
                   {renderMessage({
                     text,
                     isOwn,
@@ -156,6 +218,29 @@ const Message: React.FC<IMessageProps> = ({
               isOwn={isOwn}
               onReply={onReply}
               onDropdownChange={setIsDropdownOpen}
+              message={{
+                id: id,
+                isApprovalNeeded: false, // TODO: Add actual message approval status
+                isApproved: false,       // TODO: Add actual message approval status
+                isRejected: false,       // TODO: Add actual message rejection status
+                isDeleteRequest: false,  // TODO: Add actual delete request status
+                type: isGroup ? "group" : "user",
+                timestamp: timestamp,
+                permissions: {
+                  canApprove: !isOwn && isGroup, // TODO: Add actual permission check
+                  canEdit: isOwn,                // TODO: Add actual permission check
+                  canDelete: isOwn,              // TODO: Add actual permission check
+                }
+              }}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onSendForApproval={handleSendForApproval}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onDeleteRequest={handleDeleteRequest}
+              onCancelDeleteRequest={handleCancelDeleteRequest}
+              onInfo={handleInfo}
+              onCopy={handleCopy}
             />
           </div>
           <div

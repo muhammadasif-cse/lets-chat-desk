@@ -6,6 +6,7 @@ export const CHAT_CONFIG = {
   RECONNECT_DELAY: 5000,
   MAX_RETRY_ATTEMPTS: 3,
   INFINITE_SCROLL_THRESHOLD: 300,
+  MAX_MESSAGE_ACTION_TIME: 15 * 60 * 1000, // 15 minutes
 } as const;
 
 // API configuration constants
