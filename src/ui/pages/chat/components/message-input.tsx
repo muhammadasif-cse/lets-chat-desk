@@ -2,6 +2,7 @@ import { FileIcon, SendIcon } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/button";
 
+import { Checkbox } from "@/ui/components/ui/checkbox";
 import { IMessageInputProps } from "../../../../interfaces/chat";
 import inputReplyRender from "../helpers/input-reply-render";
 import InputEmoji from "./input-emoji";
@@ -28,7 +29,8 @@ const MessageInput: React.FC<IMessageInputProps> = ({
   >([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
-
+  const [isApprovalNeeded, setIsApprovalNeeded] = useState<boolean>(false);
+  console.log("🚀 ~ MessageInput ~ isApprovalNeeded:", isApprovalNeeded)
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mentionTimeoutRef = useRef<number>();
@@ -127,6 +129,7 @@ const MessageInput: React.FC<IMessageInputProps> = ({
       onSendMessage({
         text: message.trim(),
         replyTo: replyTo || undefined,
+        isApprovalNeeded,
         attachments: selectedFiles.length > 0 ? selectedFiles : undefined,
       });
       setMessage("");
@@ -276,10 +279,18 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
       <div className="px-4 pb-2">
         <div className="relative flex items-end bg-dark3/90 backdrop-blur-sm border border-dark2 rounded-3xl transition-all focus-within:border-green focus-within:ring-1 focus-within:ring-green/50 shadow-sm min-h-[48px]">
-          <div className="flex items-end p-1">
+       
+            <div className="flex gap-1 items-center p-1">
             <InputFileOption handleAttachment={handleAttachment} />
-          </div>
-
+            <Checkbox
+                title="Need for approval"
+                className="bg-gray"
+                id="isApprovalNeeded"
+                checked={isApprovalNeeded}
+                onCheckedChange={(checked) => setIsApprovalNeeded(!!checked)}
+              />
+              <div className="bg-white/5 w-0.5 h-10 mx-2" />
+            </div>
           <div className="flex-1 py-3 relative">
             <MentionInputComponent
               value={message}

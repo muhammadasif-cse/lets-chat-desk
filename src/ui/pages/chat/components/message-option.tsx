@@ -89,6 +89,8 @@ export default function MessageOption({
 
   const canSendForApproval = isOwn && 
     !message?.isApprovalNeeded && 
+    !message?.isApproved &&
+    !message?.isRejected &&
     isWithinTimeLimit();
 
   const canEdit = isOwn && 

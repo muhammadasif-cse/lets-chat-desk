@@ -17,6 +17,7 @@ import Message from "./message";
 import MessageInput from "./message-input";
 import { WelcomeScreen } from "./welcome-screen";
 const ChatContainer: React.FC<IChatContainerProps> = ({
+  signalR,
   selectedChat,
   messages = [],
   users = [],
@@ -204,7 +205,6 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   };
 
   const handleReplyToMessage = (message: IMessage) => {
-    // Helper function to get sender name (same logic as in render)
     const getSenderName = (userId: number, fallbackName?: string) => {
       if (userId.toString() === currentUserId) {
         return "You";
@@ -223,38 +223,32 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   // Message action handlers
   const handleApprovalDecision = (messageId: string, isApprove: boolean, type: string) => {
     console.log("Approval decision:", { messageId, isApprove, type });
-    // TODO: Implement approval decision logic with SignalR
-    // Example: signalR.approvalDecision(messageId, isApprove, type);
+    signalR.approvalDecision(messageId, isApprove, type);
   };
 
   const handleReceiveApprovedRequest = (messageId: string, type: string, approverId?: number | null) => {
     console.log("Receive approved request:", { messageId, type, approverId });
-    // TODO: Implement receive approved request logic with SignalR
-    // Example: signalR.receiveApprovedRequest(messageId, type, approverId);
+    signalR.receiveApprovedRequest(messageId, type, approverId);
   };
 
   const handleDeleteRequest = (messageId: string, type: string) => {
     console.log("Delete request:", { messageId, type });
-    // TODO: Implement delete request logic with SignalR
-    // Example: signalR.deleteRequest(messageId, type);
+    signalR.deleteRequest(messageId, type);
   };
 
   const handleDeleteMessage = (messageId: string, type: string) => {
     console.log("Delete message:", { messageId, type });
-    // TODO: Implement delete message logic with SignalR
-    // Example: signalR.deleteMessage(messageId, type);
+    signalR.deleteMessage(messageId, type);
   };
 
   const handleCancelDeleteRequest = (messageId: string, type: string) => {
     console.log("Cancel delete request:", { messageId, type });
-    // TODO: Implement cancel delete request logic with SignalR
-    // Example: signalR.cancelDeleteRequest(messageId, type);
+    signalR.cancelDeleteRequest(messageId, type);
   };
 
   const handleSetModifyMessage = async (messageId: string, newMessage: string, type: string): Promise<void> => {
     console.log("Modify message:", { messageId, newMessage, type });
-    // TODO: Implement modify message logic with SignalR
-    // Example: await signalR.setModifyMessage(messageId, newMessage, type);
+    await signalR.setModifyMessage(messageId, newMessage, type);
     return Promise.resolve();
   };
 

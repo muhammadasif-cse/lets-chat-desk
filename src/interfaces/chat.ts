@@ -136,6 +136,7 @@ export interface IChatListApiResponse {
 }
 
 export interface IChatContainerProps {
+  signalR: any;
   selectedChat?: ISelectedChat;
   messages?: IMessage[];
   users?: IChatUser[];

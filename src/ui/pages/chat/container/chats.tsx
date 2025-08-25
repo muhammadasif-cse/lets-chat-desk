@@ -174,6 +174,7 @@ const Chats = ({ selectedUser, signalR }: ChatsProps) => {
           onTyping={handleTyping}
           onLoadPreviousMessages={handleLoadPrevious}
           onLoadNextMessages={handleLoadNext}
+          signalR={signalR}
           onBack={() => {
             /* //TODO: Implement back navigation */
           }}

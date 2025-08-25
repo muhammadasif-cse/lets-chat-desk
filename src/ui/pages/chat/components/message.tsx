@@ -108,13 +108,10 @@ const Message: React.FC<IMessageProps> = ({
   };
 
   const handleSendForApproval = (messageId: string) => {
-    console.log("Send for approval:", messageId);
     if (receiveApprovedRequest && message) {
       if (message.type === "group") {
-        // Open specific approval modal for groups
         handleSendForApprovalWithSpecific({ messageId, type: message.type });
       } else {
-        // Direct approval for user messages
         receiveApprovedRequest(messageId, message.type || (isGroup ? "group" : "user"), null);
       }
     }
