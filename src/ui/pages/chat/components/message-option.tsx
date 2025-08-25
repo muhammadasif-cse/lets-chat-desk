@@ -157,7 +157,7 @@ export default function MessageOption({
               <SendIcon className="size-4 mr-2 text-warning" />
               <span className="font-medium text-warning">Send for Approval</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-green h-0.5" />
+            <DropdownMenuSeparator className="bg-green h-[1.5px]" />
           </>
         )}
 
