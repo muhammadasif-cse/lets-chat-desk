@@ -94,35 +94,12 @@ export const useSignalRInvoke = (): ISignalRProps => {
     return cleanup;
   }, []);
 
-  //* get event handlers
-  const eventHandlers = useSignalREvent(
-    authUserId,
-    permissionsRef,
-    connectionRef
-  );
-
-  //! connection management with enhanced error handling
-  const {
-    connection,
-    isConnected,
-    connectionError,
-    connectionMetrics,
-    reconnect,
-    forceReconnect,
-    checkConnection,
-  } = useSignalR(authUserId, token ?? "", eventHandlers);
-
-  //! update global connection reference
-  useEffect(() => {
-    globalConnection = connection;
-    connectionRef.current = connection;
-  }, [connection]);
-
   const getConnection = useCallback(() => globalConnection, []);
   const createSignalRMethod = useCallback(
     (methodName: string) => {
       return async (...args: any[]) => {
-        if (!checkConnection()) {
+        const connection = globalConnection;
+        if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
           console.warn(`Cannot call ${methodName}: not connected`);
           return false;
         }
@@ -132,7 +109,7 @@ export const useSignalRInvoke = (): ISignalRProps => {
 
         while (retryCount < maxRetries) {
           try {
-            await connection?.invoke(methodName, ...args);
+            await connection.invoke(methodName, ...args);
             return true;
           } catch (error: any) {
             retryCount++;
@@ -149,7 +126,7 @@ export const useSignalRInvoke = (): ISignalRProps => {
                 setTimeout(resolve, 1000 * retryCount)
               );
 
-              if (!checkConnection()) {
+              if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
                 console.warn(
                   `${methodName} failed - connection lost during retry`
                 );
@@ -168,8 +145,44 @@ export const useSignalRInvoke = (): ISignalRProps => {
         return false;
       };
     },
-    [connection, checkConnection]
+    []
   );
+
+  //* get event handlers with signalR functions
+  const eventHandlers = useSignalREvent(
+    authUserId,
+    permissionsRef,
+    connectionRef,
+    {
+      markAsSeen: useCallback(
+        async (messageId: string, type: string) => {
+          await createSignalRMethod("MarkAsSeen")(messageId, type);
+        },
+        [createSignalRMethod]
+      ),
+      markMultipleMessageAsSeen: useCallback(
+        createSignalRMethod("SetMarkMultipleMessageAsSeen"),
+        [createSignalRMethod]
+      ),
+    }
+  );
+
+  //! connection management with enhanced error handling
+  const {
+    connection,
+    isConnected,
+    connectionError,
+    connectionMetrics,
+    reconnect,
+    forceReconnect,
+    checkConnection,
+  } = useSignalR(authUserId, token ?? "", eventHandlers);
+
+  //! update global connection reference
+  useEffect(() => {
+    globalConnection = connection;
+    connectionRef.current = connection;
+  }, [connection]);
 
   //! enhanced send message with file upload support
   const sendMessage = useCallback(
@@ -362,6 +375,19 @@ export const useSignalRInvoke = (): ISignalRProps => {
       [createSignalRMethod]
     );
     
+    //! mark as seen and mark as multiple message seen
+    const markAsSeen = useCallback(
+      async (messageId: string, type: string) => {
+        await createSignalRMethod("MarkAsSeen")(messageId, type);
+      },
+      [createSignalRMethod],
+    );
+
+    const markMultipleMessageAsSeen = useCallback(
+      createSignalRMethod("SetMarkMultipleMessageAsSeen"),
+      [createSignalRMethod],
+    );
+
   return useMemo(
     () => ({
       connection,
@@ -375,9 +401,8 @@ export const useSignalRInvoke = (): ISignalRProps => {
       checkConnection,
       sendMessage,
       typingStatus,
-      markMultipleMessageAsSeen: async () => {
-        throw new Error("markMultipleMessageAsSeen not implemented");
-      },
+      markAsSeen,
+      markMultipleMessageAsSeen,
       receiveApprovedRequest: async () => {
         throw new Error("receiveApprovedRequest not implemented");
       },
@@ -386,9 +411,6 @@ export const useSignalRInvoke = (): ISignalRProps => {
       },
       notifyTypingStatus: async () => {
         throw new Error("notifyTypingStatus not implemented");
-      },
-      markAsSeen: async () => {
-        throw new Error("markAsSeen not implemented");
       },
       deleteRequest: async () => {
         throw new Error("deleteRequest not implemented");
@@ -417,6 +439,8 @@ export const useSignalRInvoke = (): ISignalRProps => {
       reconnect,
       forceReconnect,
       checkConnection,
+      markAsSeen,
+      markMultipleMessageAsSeen
     ]
   );
 };

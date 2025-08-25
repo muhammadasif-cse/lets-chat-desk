@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import useAuth from "@/ui/hooks/useAuth";
 import useChat from "@/ui/hooks/useChats";
 import {
-  IChatItem,
-  IChatUser,
-  IGetChatsRequest,
-  ISelectedChat,
-  ISendMessageData,
+    IChatItem,
+    IChatUser,
+    IGetChatsRequest,
+    ISelectedChat,
+    ISendMessageData,
 } from "../../../../interfaces/chat";
 import ChatContainer from "../components/chat-container";
 import Loading from "../utils/loading";
@@ -84,7 +84,7 @@ const Chats = ({ selectedUser, signalR }: ChatsProps) => {
         type: requestParams.type,
       });
 
-      initializeChatRef.current(selectedUser, currentUserId);
+      initializeChatRef.current(selectedUser, currentUserId, signalR);
     } else {
       clearChatRef.current();
       setSelectedChat(null);

@@ -4,6 +4,7 @@ import {
   addOptimisticMessage,
   addOrUpdateRecentUser,
   setTypingStatus,
+  updateMessageStatus,
 } from "@/redux/store/actions";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
@@ -12,7 +13,11 @@ import notificationManager from "../lib/notification-manager";
 export const useSignalREvent = (
   authUserId: number,
   permissionsRef: any,
-  connectionRef?: React.MutableRefObject<any>
+  connectionRef?: React.MutableRefObject<any>,
+  signalRFunctions?: {
+    markAsSeen: (messageId: string, type: string) => Promise<void>;
+    markMultipleMessageAsSeen: (...args: any[]) => Promise<boolean>;
+  }
 ) => {
   const dispatch = useDispatch();
   const { recentUsers, selectedChatId } = useAppSelector((state) => state.chat);
@@ -87,13 +92,18 @@ export const useSignalREvent = (
         attachments: res.attachments || [],
       };
 
-      // Always add message to current chat for instant display
       if (chatId === selectedChatId) {
         console.log("📨 Adding message to current chat:", messageForChat);
         dispatch(addOptimisticMessage(messageForChat));
+        
+        if (!isOwnMessage && signalRFunctions?.markAsSeen) {
+          console.log("🔄 Auto-marking message as seen for current chat:", res.messageId);
+          signalRFunctions.markAsSeen(res.messageId, "Message").catch((error) => {
+            console.error("❌ Failed to mark message as seen:", error);
+          });
+        }
       }
 
-      // Calculate unread count properly
       const existingUser = recentUsers.find((user) => user.id === chatId);
       let newUnreadCount = 0;
       
@@ -188,18 +198,36 @@ export const useSignalREvent = (
     [dispatch, selectedChatId, authUserId]
   );
 
-  //   //! message seen handler
-  //   const handleMarkSeen = useCallback(
-  //     (data: { messageId: string; isSeen: boolean }) => {
-  //       dispatch(
-  //         updateMessageStatus({
-  //           messageId: data.messageId,
-  //           status: data.isSeen ? "seen" : "delivered",
-  //         })
-  //       );
-  //     },
-  //     [dispatch]
-  //   );
+
+  //* mark seen multiple message
+  const markAsSeen = useCallback(
+    (data: { messageId: string; isSeen: boolean }) => {
+      dispatch(
+        updateMessageStatus({
+          messageId: data.messageId,
+          status: data.isSeen ? "seen" : "delivered",
+        })
+      );
+    },
+    [dispatch]
+  );
+
+  const markAsSeenMultiple = useCallback(
+    (data: any) => {
+      console.log("📥 Seen all messages:", data);
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach((msg: any) => {
+          dispatch(
+            updateMessageStatus({
+              messageId: msg.messageId,
+              status: "seen",
+            }),
+          );
+        });
+      }
+    },
+    [dispatch],
+  );
 
   //   //! approval decision handler with professional deduplication
   //   const handleApprovalDecision = useCallback(
@@ -729,8 +757,7 @@ export const useSignalREvent = (
     () => ({
       OnReceiveMessage: receiveMessage,
       OnReceiveTyping: typingStatus,
-      //   OnSeenMessage: handleMarkSeen,
-      //   OnSeenAllMessage: handleSeenAllMessage,
+      OnSeenAllMessage: markAsSeenMultiple,
       //   OnApprovalDecision: handleApprovalDecision,
       //   OnReceiveApprovedRequest: handleReceiveApprovedRequest,
       //   OnReceiveDeleteRequest: handleReceiveDeleteRequest,
@@ -752,7 +779,7 @@ export const useSignalREvent = (
       typingStatus,
       selectedChatId,
       authUserId,
-      //   handleMarkSeen,
+      markAsSeenMultiple
       //   handleSeenAllMessage,
       //   handleApprovalDecision,
       //   handleReceiveApprovedRequest,

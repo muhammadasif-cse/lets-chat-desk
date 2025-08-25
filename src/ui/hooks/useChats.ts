@@ -98,15 +98,31 @@ export const useChat = () => {
   );
 
   const initializeChat = useCallback(
-    async (chatItem: IChatItem, userId: number) => {
+    async (chatItem: IChatItem, userId: number, signalR?: any) => {
       
-      if (currentChatIdRef.current === chatItem.id)        return;
+      if (currentChatIdRef.current === chatItem.id) return;
 
+      console.log("🔧 Initializing chat:", chatItem.id, "Current:", currentChatIdRef.current);
+      
       currentChatIdRef.current = chatItem.id;
       dispatch(setSelectedChatId(chatItem.id));
       dispatch(resetChatState());
       
       dispatch(resetUnreadCount(chatItem.id));
+
+      if (signalR && signalR.markMultipleMessageAsSeen) {
+        console.log("📋 Marking all messages as seen for chat:", chatItem.id);
+        try {
+          await signalR.markMultipleMessageAsSeen(
+            Number(chatItem.id),
+            chatItem.type,
+            chatItem.type === "group" ? chatItem.id : null
+          );
+          console.log("✅ Successfully marked messages as seen");
+        } catch (error) {
+          console.error("❌ Failed to mark messages as seen:", error);
+        }
+      }
 
       const params: IGetChatsRequest = {
         groupId: chatItem.type === "group" ? chatItem.id : null,
@@ -117,6 +133,7 @@ export const useChat = () => {
       };
 
       await loadChats(params);
+      console.log("🔧 Chat initialization completed for:", chatItem.id);
     },
     [dispatch, loadChats]
   );
