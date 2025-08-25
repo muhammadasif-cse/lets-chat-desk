@@ -1,9 +1,9 @@
 import { IChatItem, IMessage } from "@/interfaces/chat";
 import { useAppSelector } from "@/redux/selector";
 import {
-    addOptimisticMessage,
-    addOrUpdateRecentUser,
-    setTypingStatus,
+  addOptimisticMessage,
+  addOrUpdateRecentUser,
+  setTypingStatus,
 } from "@/redux/store/actions";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
@@ -150,40 +150,38 @@ export const useSignalREvent = (
     (data: any) => {
       console.log("🔄 Typing status received:", data);
       const { fromUserId, toUserId, isTyping, userName, groupId, type } = data;
+      
+      if (fromUserId === authUserId) {
+        console.log("Ignoring own typing status");
+        return;
+      }
+      
       let isRelevantChat = false;
       let key = "left";
 
       if (type === "group" && groupId) {
         isRelevantChat = groupId === selectedChatId;
-        key = fromUserId?.toString() === selectedChatId ? "both" : "left";
+        key = "left";
       } else {
         isRelevantChat = fromUserId?.toString() === selectedChatId;
-        key = fromUserId?.toString() === selectedChatId ? "both" : "left";
+        key = "left";
       }
-
-      console.log("🔄 Typing status processed:", {
-        isRelevantChat,
-        selectedChatId,
-        fromUserId,
-        groupId,
-        type,
-        isTyping,
-        userName,
-      });
-
-      dispatch(
-        setTypingStatus({
-          senderId: fromUserId,
-          receiverId: toUserId,
-          isTyping,
-          username: userName || "",
-          groupId: groupId || null,
-          type,
-          key,
-        })
-      );
+      
+      if (isRelevantChat) {
+        dispatch(
+          setTypingStatus({
+            senderId: fromUserId,
+            receiverId: toUserId,
+            isTyping,
+            username: userName || "",
+            groupId: groupId || null,
+            type,
+            key,
+          })
+        );
+      }
     },
-    [dispatch, selectedChatId]
+    [dispatch, selectedChatId, authUserId]
   );
 
   //   //! message seen handler

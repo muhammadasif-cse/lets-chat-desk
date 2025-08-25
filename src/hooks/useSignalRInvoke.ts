@@ -3,9 +3,9 @@ import { ISignalRProps } from "@/interfaces/signalR";
 import { buildFileUrl } from "@/lib/utils/file-url-builder";
 import { useAppSelector } from "@/redux/selector";
 import {
-    addOptimisticMessage,
-    updateMessageAttachments,
-    updateMessageStatus,
+  addOptimisticMessage,
+  updateMessageAttachments,
+  updateMessageStatus,
 } from "@/redux/store/actions";
 import { useUploadChatFileMutation } from "@/redux/store/mutations";
 import * as signalR from "@microsoft/signalr";
@@ -293,7 +293,6 @@ export const useSignalRInvoke = (): ISignalRProps => {
           try {
             const uploadResponse = await uploadChatFile(formData).unwrap();
             console.log("🚀 ~ Upload response:", uploadResponse);
-            // API returns result as array, not result.files
             const uploadedFiles = uploadResponse?.result ?? [];
 
             const updatedAttachments = uploadedFiles.map(
@@ -303,9 +302,9 @@ export const useSignalRInvoke = (): ISignalRProps => {
                     ?.file || new File([], "")
                 ),
                 filePath: uploadedFile.filePath,
-                fileName: uploadedFile.fileName, // Use fileName from response
+                fileName: uploadedFile.fileName, 
                 url: buildFileUrl(uploadedFile.filePath),
-                size: formatFileSize(0), // Size not provided in response
+                size: formatFileSize(0), 
               })
             );
 
@@ -344,91 +343,26 @@ export const useSignalRInvoke = (): ISignalRProps => {
     ]
   );
 
-  //   const setModifyMessage = useCallback(
-  //     createSignalRMethod("SetModifyMessage"),
-  //     [createSignalRMethod]
-  //   );
-  //   const notifyTypingStatus = useCallback(
-  //     async (
-  //       fromUserId: number,
-  //       toUserId: number,
-  //       isTyping: boolean,
-  //       type: "group" | "user",
-  //       groupId: string | null = null
-  //     ) => {
-  //       await createSignalRMethod("SendTyping")(
-  //         parseInt(fromUserId.toString()),
-  //         parseInt(toUserId.toString()),
-  //         isTyping,
-  //         type,
-  //         groupId
-  //       );
-  //     },
-  //     [createSignalRMethod]
-  //   );
-
-  //   const markAsSeen = useCallback(
-  //     async (messageId: string, type: string) => {
-  //       await createSignalRMethod("MarkAsSeen")(messageId, type);
-  //     },
-  //     [createSignalRMethod]
-  //   );
-
-  //   const markMultipleMessageAsSeen = useCallback(
-  //     createSignalRMethod("SetMarkMultipleMessageAsSeen"),
-  //     [createSignalRMethod]
-  //   );
-  //   const approvalDecision = useCallback(
-  //     createSignalRMethod("SetApprovalDecision"),
-  //     [createSignalRMethod]
-  //   );
-
-  //   const receiveApprovedRequest = useCallback(
-  //     async (messageId: string, type: string, approverId?: number | null) => {
-  //       playSound("/files/message.mp3");
-  //       await createSignalRMethod("SendForApprove")(messageId, type, approverId);
-  //     },
-  //     [createSignalRMethod]
-  //   );
-
-  //   const setMessageReaction = useCallback(
-  //     createSignalRMethod("SetMessageReaction"),
-  //     [createSignalRMethod]
-  //   );
-  //   const deleteRequest = useCallback(createSignalRMethod("SetDeleteRequest"), [
-  //     createSignalRMethod,
-  //   ]);
-  //   const deleteMessage = useCallback(createSignalRMethod("SetDeleteMessage"), [
-  //     createSignalRMethod,
-  //   ]);
-  //   const cancelDeleteRequest = useCallback(
-  //     createSignalRMethod("SetCancelDeleteRequest"),
-  //     [createSignalRMethod]
-  //   );
-
-  //! memoized return value
-
   //! send typing status
-
-  const typingStatus = useCallback(
-    async (
-      fromUserId: number,
-      toUserId: number,
-      isTyping: boolean,
-      type: "group" | "user",
-      groupId: string | null = null
-    ) => {
-      await createSignalRMethod("SendTyping")(
-        parseInt(fromUserId.toString()),
-        parseInt(toUserId.toString()),
-        isTyping,
-        type,
-        groupId
-      );
-    },
-    [createSignalRMethod]
-  );
-
+    const typingStatus = useCallback(
+      async (
+        fromUserId: number,
+        toUserId: number,
+        isTyping: boolean,
+        type: "group" | "user",
+        groupId: string | null = null
+      ) => {
+        await createSignalRMethod("SendTyping")(
+          parseInt(fromUserId.toString()),
+          parseInt(toUserId.toString()),
+          isTyping,
+          type,
+          groupId
+        );
+      },
+      [createSignalRMethod]
+    );
+    
   return useMemo(
     () => ({
       connection,

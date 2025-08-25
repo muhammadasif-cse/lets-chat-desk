@@ -141,6 +141,7 @@ export interface IChatContainerProps {
   users?: IChatUser[];
   currentUserId?: string;
   onSendMessage?: (message: ISendMessageData) => void;
+  onTyping?: (isTyping: boolean) => void;
   onBack?: () => void;
   onCall?: () => void;
   onVideoCall?: () => void;
@@ -166,7 +167,7 @@ export interface IHeaderProps {
 export interface IMessageInputProps {
   placeholder?: string;
   onSendMessage: (messageData: ISendMessageData) => void;
-  onTyping?: () => void;
+  onTyping?: (isTyping: boolean) => void;
   disabled?: boolean;
   replyTo?: IMessageReply;
   onCancelReply?: () => void;

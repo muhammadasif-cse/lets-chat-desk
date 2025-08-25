@@ -45,7 +45,8 @@ const Chats = ({ selectedUser, signalR }: ChatsProps) => {
   clearChatRef.current = clearChat;
 
   const currentUserId = user?.userId || 1;
-
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (selectedUser) {
       const chat: ISelectedChat = {
@@ -66,8 +67,6 @@ const Chats = ({ selectedUser, signalR }: ChatsProps) => {
         isAddMembers: selectedUser.isAddMembers,
         hasDeleteRequest: selectedUser.hasDeleteRequest,
       };
-      console.log("🚀 ~ Chats ~ chat:", chat);
-
       setSelectedChat(chat);
 
       const requestParams: IGetChatsRequest = {
@@ -114,6 +113,21 @@ const Chats = ({ selectedUser, signalR }: ChatsProps) => {
     );
   };
 
+  const handleTyping = (isTyping: boolean) => {
+    if (!selectedChat?.id || !user?.userId) return;
+  
+    if (isTypingRef.current !== isTyping) {
+      signalR.typingStatus(
+        user.userId,
+        selectedChat.id,
+        isTyping,
+        selectedChat.type,
+        selectedChat.id?.toString() ?? "",
+      );
+      isTypingRef.current = isTyping;
+    }
+  };
+
   if (!selectedChat) {
     return (
       <div className="h-full flex items-center justify-center bg-foreground">
@@ -157,6 +171,7 @@ const Chats = ({ selectedUser, signalR }: ChatsProps) => {
           hasMoreNext={hasMoreNext}
           loadedCallCounts={loadedCallCounts}
           onSendMessage={handleSendMessage}
+          onTyping={handleTyping}
           onLoadPreviousMessages={handleLoadPrevious}
           onLoadNextMessages={handleLoadNext}
           onBack={() => {

@@ -29,6 +29,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
   onInfo,
   onLoadPreviousMessages,
   onLoadNextMessages,
+  onTyping,
   currentCallCount = 0,
   hasMorePrevious = false,
   hasMoreNext = false,
@@ -366,6 +367,7 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
           onCancelReply={handleCancelReply}
           placeholder={`Message ${selectedChat.name}`}
           isGroup={selectedChat.type === "group"}
+          onTyping={onTyping}
         />
       </div>
     </div>

@@ -145,7 +145,6 @@ export const chatSlice = createSlice({
       }>
     ) => {
       if (!action.payload.isTyping) {
-        // Clear typing status when isTyping is false
         state.typingStatus = null;
       } else {
         state.typingStatus = action.payload;

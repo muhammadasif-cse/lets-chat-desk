@@ -65,19 +65,19 @@ const MessageInput: React.FC<IMessageInputProps> = ({
   }, [message]);
 
   useEffect(() => {
-    if (onTyping) {
-      onTyping();
-    }
-
+    if (!onTyping) return;
     if (mentionTimeoutRef.current) {
       clearTimeout(mentionTimeoutRef.current);
     }
 
-    mentionTimeoutRef.current = setTimeout(() => {
-      if (onTyping) {
-        onTyping();
-      }
-    }, 3000);
+    if (message.trim().length > 0) {
+      onTyping(true);
+      mentionTimeoutRef.current = setTimeout(() => {
+        onTyping(false);
+      }, 3000);
+    } else {
+      onTyping(false);
+    }
 
     return () => {
       if (mentionTimeoutRef.current) {
@@ -85,6 +85,22 @@ const MessageInput: React.FC<IMessageInputProps> = ({
       }
     };
   }, [message, onTyping]);
+
+  useEffect(() => {
+    return () => {
+      if (onTyping && message.trim().length > 0) {
+        onTyping(false);
+      }
+      
+      if (mentionTimeoutRef.current) {
+        clearTimeout(mentionTimeoutRef.current);
+      }
+      
+      filePreviewUrls.forEach(url => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, []); 
 
   const handleMentionInputChange = useCallback(
     (
@@ -104,6 +120,10 @@ const MessageInput: React.FC<IMessageInputProps> = ({
 
   const handleSend = () => {
     if (message.trim() || selectedFiles.length > 0) {
+      if (onTyping) {
+        onTyping(false);
+      }
+      
       onSendMessage({
         text: message.trim(),
         replyTo: replyTo || undefined,
@@ -112,7 +132,6 @@ const MessageInput: React.FC<IMessageInputProps> = ({
       setMessage("");
       setMentions([]);
       
-      // Cleanup preview URLs before resetting files
       filePreviewUrls.forEach(url => {
         if (url) URL.revokeObjectURL(url);
       });
@@ -160,7 +179,6 @@ const MessageInput: React.FC<IMessageInputProps> = ({
   };
 
   const removeFile = (index: number) => {
-    // Cleanup preview URL if it exists
     if (filePreviewUrls[index]) {
       URL.revokeObjectURL(filePreviewUrls[index]);
     }
