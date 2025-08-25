@@ -143,7 +143,7 @@ export default function MessageOption({
               <XIcon className="size-4 mr-2" />
               <span className="font-medium text-danger">Reject</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-green" />
+            <DropdownMenuSeparator className="bg-green h-0.5" />
           </>
         )}
 
@@ -157,7 +157,7 @@ export default function MessageOption({
               <SendIcon className="size-4 mr-2 text-warning" />
               <span className="font-medium text-warning">Send for Approval</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-green" />
+            <DropdownMenuSeparator className="bg-green h-0.5" />
           </>
         )}
 
@@ -206,8 +206,7 @@ export default function MessageOption({
         {/* Delete Actions */}
         {(canDeleteRequest || canConfirmDelete || canCancelDelete) && (
           <>
-            <DropdownMenuSeparator className="bg-green" />
-            
+           <DropdownMenuSeparator className="bg-green h-0.5" />
             {canDeleteRequest && (
               <DropdownMenuItem
                 onClick={() => onDeleteRequest?.(message?.id || "")}
