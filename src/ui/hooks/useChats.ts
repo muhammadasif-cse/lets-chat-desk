@@ -12,6 +12,7 @@ import {
   appendNextChats,
   appendPreviousChats,
   resetChatState,
+  resetUnreadCount,
   setChats,
   setCurrentCallCount,
   setError,
@@ -98,13 +99,14 @@ export const useChat = () => {
 
   const initializeChat = useCallback(
     async (chatItem: IChatItem, userId: number) => {
-      if (currentChatIdRef.current === chatItem.id) {
-        return;
-      }
+      
+      if (currentChatIdRef.current === chatItem.id)        return;
 
       currentChatIdRef.current = chatItem.id;
       dispatch(setSelectedChatId(chatItem.id));
       dispatch(resetChatState());
+      
+      dispatch(resetUnreadCount(chatItem.id));
 
       const params: IGetChatsRequest = {
         groupId: chatItem.type === "group" ? chatItem.id : null,

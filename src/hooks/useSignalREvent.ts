@@ -12,11 +12,10 @@ import notificationManager from "../lib/notification-manager";
 export const useSignalREvent = (
   authUserId: number,
   permissionsRef: any,
-  connectionRef?: React.MutableRefObject<any>,
-  selectedChatId?: string | null
+  connectionRef?: React.MutableRefObject<any>
 ) => {
   const dispatch = useDispatch();
-  const { recentUsers } = useAppSelector((state) => state.chat);
+  const { recentUsers, selectedChatId } = useAppSelector((state) => state.chat);
   const processedMessageIds = useRef(new Set<string>());
   const processedApprovalIds = useRef(new Set<string>());
   const processedReplyIds = useRef(new Set<string>());
@@ -51,8 +50,6 @@ export const useSignalREvent = (
   //* receive messages
   const receiveMessage = useCallback(
     async (res: any) => {
-      console.log("🚀 ~ useSignalREvent ~ receiveMessage:", res);
-
       if (!res || !res.messageId) {
         console.warn("Invalid message received:", res);
         return;
@@ -63,7 +60,9 @@ export const useSignalREvent = (
       }
       processedMessageIds.current.add(res.messageId);
 
-      const chatId = res.type === "group" ? res.groupId : res.userId.toString();
+      const chatId = res.type === "group" 
+        ? res.groupId 
+        : (res.userId === authUserId ? res.toUserId : res.userId).toString();
       const isOwnMessage =
         res.userId === authUserId || res.senderId === authUserId;
 
@@ -88,35 +87,40 @@ export const useSignalREvent = (
         attachments: res.attachments || [],
       };
 
+      // Always add message to current chat for instant display
       if (chatId === selectedChatId) {
         console.log("📨 Adding message to current chat:", messageForChat);
         dispatch(addOptimisticMessage(messageForChat));
       }
 
+      // Calculate unread count properly
+      const existingUser = recentUsers.find((user) => user.id === chatId);
+      let newUnreadCount = 0;
+      
+      if (!isOwnMessage) {
+        if (chatId === selectedChatId) {
+          newUnreadCount = 0;
+        } else {
+          const previousCount = existingUser?.unreadCount || 0;
+          newUnreadCount = previousCount + 1;
+        }
+      } 
+
       const recentUserUpdate: IChatItem = {
         id: chatId,
-        name: res.userName || "",
-        photo: res.photo || "",
-        description: res.description || "",
+        name: res.userName || existingUser?.name || "",
+        photo: res.photo || existingUser?.photo || "",
+        description: res.description || existingUser?.description || "",
         type: res.type || "user",
         lastMessage: res.message || "",
         lastMessageId: res.messageId || "",
         lastMessageDate: res.date || new Date().toISOString(),
-        unreadCount: isOwnMessage
-          ? 0
-          : chatId === selectedChatId
-          ? 0
-          : (() => {
-              const existingUser = recentUsers.find(
-                (user) => user.id === chatId
-              );
-              return (existingUser?.unreadCount || 0) + 1;
-            })(),
-        isAdmin: res.isAdmin || false,
-        isEditGroupSettings: res.isEditGroupSettings || false,
-        isSendMessages: res.isSendMessages || true,
-        isAddMembers: res.isAddMembers || false,
-        hasDeleteRequest: res.hasDeleteRequest || false,
+        unreadCount: newUnreadCount,
+        isAdmin: res.isAdmin !== undefined ? res.isAdmin : (existingUser?.isAdmin || false),
+        isEditGroupSettings: res.isEditGroupSettings !== undefined ? res.isEditGroupSettings : (existingUser?.isEditGroupSettings || false),
+        isSendMessages: res.isSendMessages !== undefined ? res.isSendMessages : (existingUser?.isSendMessages ?? true),
+        isAddMembers: res.isAddMembers !== undefined ? res.isAddMembers : (existingUser?.isAddMembers || false),
+        hasDeleteRequest: res.hasDeleteRequest !== undefined ? res.hasDeleteRequest : (existingUser?.hasDeleteRequest || false),
       };
       dispatch(addOrUpdateRecentUser(recentUserUpdate));
 
@@ -747,6 +751,7 @@ export const useSignalREvent = (
       receiveMessage,
       typingStatus,
       selectedChatId,
+      authUserId,
       //   handleMarkSeen,
       //   handleSeenAllMessage,
       //   handleApprovalDecision,

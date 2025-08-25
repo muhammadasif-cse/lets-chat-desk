@@ -44,6 +44,14 @@ export const chatSlice = createSlice({
         state.recentUsers.unshift(action.payload);
       }
     },
+    resetUnreadCount: (state, action: PayloadAction<string>) => {
+      const index = state.recentUsers.findIndex(
+        (user) => user.id === action.payload
+      );
+      if (index !== -1) {
+        state.recentUsers[index].unreadCount = 0;
+      }
+    },
     setPermissions: (state, action: PayloadAction<TChatPermissions[]>) => {
       state.permissions = action.payload;
     },
@@ -90,6 +98,7 @@ export const chatSlice = createSlice({
       state.isLoadingMessages = action.payload;
     },
     setSelectedChatId: (state, action: PayloadAction<string | null>) => {
+      console.log("🔧 Redux: Setting selectedChatId from", state.selectedChatId, "to", action.payload);
       state.selectedChatId = action.payload;
     },
     setError: (state, action: PayloadAction<string | null>) => {
@@ -157,6 +166,7 @@ export const {
   setRecentUsers,
   setUpdateRecentUsers,
   addOrUpdateRecentUser,
+  resetUnreadCount,
   setPermissions,
   setSearchQuery,
   setChats,

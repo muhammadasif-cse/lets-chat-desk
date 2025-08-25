@@ -98,8 +98,7 @@ export const useSignalRInvoke = (): ISignalRProps => {
   const eventHandlers = useSignalREvent(
     authUserId,
     permissionsRef,
-    connectionRef,
-    selectedChatId
+    connectionRef
   );
 
   //! connection management with enhanced error handling

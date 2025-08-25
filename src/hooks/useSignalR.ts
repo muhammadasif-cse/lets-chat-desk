@@ -328,6 +328,19 @@ export const useSignalR = (
     };
   }, [authUserId, token]);
 
+  //! Re-register event handlers when they change
+  useEffect(() => {
+    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+      Object.keys(eventHandlers).forEach((event) => {
+        connection.off(event);
+      });
+      Object.entries(eventHandlers).forEach(([event, handler]) => {
+        connection.on(event, handler);
+      });
+      singletonEventHandlers = eventHandlers;
+    }
+  }, [eventHandlers, connection]);
+
   //! manual reconnection method with reset
   const reconnect = useCallback(async () => {
     reconnectAttempts.current = 0;
