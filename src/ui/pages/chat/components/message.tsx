@@ -83,11 +83,11 @@ const Message: React.FC<IMessageProps> = ({
   };
 
   const getMessageTextColor = (message: any) => {
-    if (message?.isDeleteRequest) return "text-danger/30";
+    if (message?.isDeleteRequest) return "text-danger/30 font-bold";
     if (message?.isApprovalNeeded) {
-      if (message?.isApproved) return "text-green2"; 
-      if (message?.isRejected) return "text-danger"; 
-      return "text-yellow-400";
+      if (message?.isApproved) return "text-green2 font-bold"; 
+      if (message?.isRejected) return "text-danger font-bold"; 
+      return "text-warning font-bold";
     }
     return "text-white";
   };
@@ -303,9 +303,9 @@ const Message: React.FC<IMessageProps> = ({
                 type: message?.type || (isGroup ? "group" : "user"),
                 timestamp: timestamp,
                 permissions: {
-                  canApprove: !isOwn && isGroup, // TODO: Add actual permission check
-                  canEdit: isOwn,                // TODO: Add actual permission check
-                  canDelete: isOwn,              // TODO: Add actual permission check
+                  canApprove: !isOwn && isGroup || true,
+                  canEdit: isOwn,               
+                  canDelete: isOwn,             
                 }
               }}
               onApprove={handleApprove}

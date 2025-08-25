@@ -228,8 +228,8 @@ export const useSignalREvent = (
     [dispatch],
   );
 
-    //* approval decision handler with professional deduplication
-    const approvalDecision = useCallback(
+  //* approval decision handler with professional deduplication
+  const approvalDecision = useCallback(
       ({
         messageId,
         isApproved,
@@ -267,7 +267,7 @@ export const useSignalREvent = (
         }
       },
       [dispatch]
-    );
+  );
 
   //   //! receive approved request handler with deduplication
   //   const handleReceiveApprovedRequest = useCallback(

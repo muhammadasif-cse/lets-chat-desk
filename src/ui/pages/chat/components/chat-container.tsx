@@ -337,12 +337,12 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                   ? processAttachments(parentMessage.attachments || [])
                   : [];
 
-                // Helper function to get sender name from userId
+                  
                 const getSenderName = (userId: number, fallbackName?: string) => {
                   if (userId.toString() === currentUserId) {
                     return "You";
                   }
-                  // Map userId to user info if available
+                  
                   const user = users.find(u => u.id === userId.toString());
                   return user?.name || fallbackName || selectedChat.name || "User";
                 };

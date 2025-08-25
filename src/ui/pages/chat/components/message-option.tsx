@@ -133,10 +133,10 @@ export default function MessageOption({
           <>
             <DropdownMenuItem
               onClick={() => onApprove?.(message?.id || "")}
-              className="cursor-pointer text-green-400"
+              className="cursor-pointer hover:bg-dark/30 focus:bg-dark/30"
             >
               <CheckIcon className="size-4 mr-2" />
-              <span className="font-medium">Approve</span>
+              <span className="font-medium text-green2">Approve</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onReject?.(message?.id || "")}

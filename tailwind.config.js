@@ -54,7 +54,7 @@ export default {
         teal: "#0A332C",
         teal2: "#005c4b",
         dark4: "#262E34",
-        danger: "#ef4444",
+        danger: "#dc3545",
         warning: "#f59e0b",
         chart: {
           1: "hsl(var(--chart-1))",
