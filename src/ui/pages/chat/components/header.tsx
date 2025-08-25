@@ -35,6 +35,7 @@ const Header = ({
   onInfo,
 }: IHeaderProps) => {
   const { typingStatus } = useAppSelector((state) => state.chat);
+  console.log("🚀 ~ Header ~ typingStatus:", typingStatus)
   const dispatch = useDispatch();
   const [imageError, setImageError] = useState(false);
 

@@ -44,15 +44,8 @@ const Login = () => {
 
   const onSubmit = async (form_data: TLogin) => {
     try {
-      console.log("🚀 Login attempt with data:", { 
-        username: form_data.username, 
-        hasPassword: !!form_data.password,
-        apiUrl: `${import.meta.env.VITE_API_HTTP}://${import.meta.env.VITE_API_HOST}/userservice/user/login`
-      });
-      
       const response = await login(form_data).unwrap();
-      console.log("🚀 Login response:", response);
-      
+
       if (response?.code === 200 || response?.success) {
         toast.success(response?.message || "Login successful!");
 
