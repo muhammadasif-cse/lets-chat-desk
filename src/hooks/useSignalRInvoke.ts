@@ -388,6 +388,12 @@ export const useSignalRInvoke = (): ISignalRProps => {
       [createSignalRMethod],
     );
 
+    //! approval decision
+    const approvalDecision = useCallback(createSignalRMethod("SetApprovalDecision"), [
+      createSignalRMethod,
+    ]);
+
+
   return useMemo(
     () => ({
       connection,
@@ -403,11 +409,9 @@ export const useSignalRInvoke = (): ISignalRProps => {
       typingStatus,
       markAsSeen,
       markMultipleMessageAsSeen,
+      approvalDecision,
       receiveApprovedRequest: async () => {
         throw new Error("receiveApprovedRequest not implemented");
-      },
-      approvalDecision: async () => {
-        throw new Error("approvalDecision not implemented");
       },
       notifyTypingStatus: async () => {
         throw new Error("notifyTypingStatus not implemented");

@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/button";
 
 import { IMessageInputProps } from "../../../../interfaces/chat";
-import inputReplyRender from "../utils/input-reply-render";
+import inputReplyRender from "../helpers/input-reply-render";
 import InputEmoji from "./input-emoji";
 import InputFileOption from "./input-file-option";
 import MentionInputComponent from "./mention-input";

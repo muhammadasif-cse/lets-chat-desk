@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import useAuth from "@/ui/hooks/useAuth";
 import useChat from "@/ui/hooks/useChats";
 import {
-    IChatItem,
-    IChatUser,
-    IGetChatsRequest,
-    ISelectedChat,
-    ISendMessageData,
+  IChatItem,
+  IChatUser,
+  IGetChatsRequest,
+  ISelectedChat,
+  ISendMessageData,
 } from "../../../../interfaces/chat";
 import ChatContainer from "../components/chat-container";
-import Loading from "../utils/loading";
+import Loading from "../helpers/loading";
 
 interface ChatsProps {
   selectedUser?: IChatItem;

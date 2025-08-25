@@ -21,6 +21,8 @@ export const API_ENDPOINTS = {
   GET_CHATS: "/chatservice/chats/GetChats",
   GET_RECENT_CHAT: "/chatservice/chats/GetRecentChat",
   UPLOAD_CHAT_ATTACHMENT: "/chatservice/chats/uploadAttachment",
+  GET_MESSAGE_INFO: "/chatservice/chats/GetMessageInfo",
+  GET_ADMIN_BY_GROUP_ID: "/chatservice/group/GetAdminByGroupId",
 } as const;
 
 // File upload constants

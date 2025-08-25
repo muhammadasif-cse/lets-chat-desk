@@ -33,11 +33,27 @@ export const ChatMutations = apiTag.injectEndpoints({
         body: data,
       }),
     }),
+
+    getAdminByGroupId: builder.mutation({
+      query: (groupId: string) => ({
+        url: `${API_ENDPOINTS.GET_ADMIN_BY_GROUP_ID}?groupId=${groupId}`,
+        method: "GET",
+      }),
+    }),
+
+    getMessageInfo: builder.mutation({
+      query: ({ messageId, type }: { messageId: string; type: string }) => ({
+        url: `${API_ENDPOINTS.GET_MESSAGE_INFO}?messageId=${messageId}&type=${type}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
 export const { 
   useGetRecentUsersMutation, 
   useGetChatsMutation,
-  useUploadChatFileMutation
+  useUploadChatFileMutation,
+  useGetAdminByGroupIdMutation,
+  useGetMessageInfoMutation
 } = ChatMutations;

@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { IMessageProps } from "../../../../interfaces/chat";
-import { renderMessageStatus } from "../utils/message-status";
-import { renderAttachment } from "../utils/render-attachment";
-import { renderMessage } from "../utils/render-message";
-import { renderReply } from "../utils/render-reply";
+import { useAppSelector } from "../../../../redux/selector";
+import { useGetAdminByGroupIdMutation } from "../../../../redux/store/mutations";
+import { renderMessageStatus } from "../helpers/message-status";
+import { renderAttachment } from "../helpers/render-attachment";
+import { renderMessage } from "../helpers/render-message";
+import { renderReply } from "../helpers/render-reply";
 import { formatTime } from "../utils/time-formatting";
 import { MediaPreviewModal } from "./media-preview-modal";
+import MessageEdit from "./message-edit";
+import MessageInfo from "./message-info";
 import MessageOption from "./message-option";
+import MessagePermissions from "./message-permissions";
 import MessageReaction from "./message-reaction";
 
 const Message: React.FC<IMessageProps> = ({
@@ -22,11 +27,60 @@ const Message: React.FC<IMessageProps> = ({
   attachments = [],
   replyTo,
   onReply,
+  approvalDecision,
+  receiveApprovedRequest,
+  deleteRequest,
+  deleteMessage,
+  cancelDeleteRequest,
+  setModifyMessage,
+  message,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isOpenReaction, setIsOpenReaction] = useState(false);
   const [isMediaPreviewOpen, setIsMediaPreviewOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  
+  // New modal states
+  const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<{messageId: string; type: string}>({
+    messageId: "",
+    type: "",
+  });
+  const [admins, setAdmins] = useState<any[]>([]);
+
+  // Redux and API
+  const { selectedChatId } = useAppSelector((state) => state.chat);
+  const [getAdminByGroupId] = useGetAdminByGroupIdMutation();
+
+  //* get group admins
+  const handleGetGroupAdmins = async (groupId: string) => {
+    try {
+      const response = await getAdminByGroupId(groupId).unwrap();
+      const { code, result } = response as { code: number; result: any[] };
+      if (code === 200 && Array.isArray(result)) {
+        setAdmins(result);
+        return result;
+      } else {
+        console.error("Failed to fetch group admins");
+      }
+    } catch (error: any) {
+      console.error("Error fetching group admins:", error?.data?.message || error.message || "Something went wrong");
+    }
+  };
+
+  //* send for approval
+  const handleSendForApprovalWithSpecific = async (data: any) => {
+    if (data.type === "group") {
+      const admins = await handleGetGroupAdmins(selectedChatId || "");
+      if (admins) {
+        setIsPermissionsOpen(true);
+        setSelectedMessage({ messageId: data.messageId, type: data.type });
+      }
+    }
+  };
 
   const getMessageTextColor = (message: any) => {
     if (message?.isDeleteRequest) return "text-danger/30";
@@ -41,48 +95,73 @@ const Message: React.FC<IMessageProps> = ({
   // Message action handlers
   const handleApprove = (messageId: string) => {
     console.log("Approve message:", messageId);
-    // TODO: Implement approve logic
+    if (approvalDecision && message) {
+      approvalDecision(messageId, true, message.type || (isGroup ? "group" : "user"));
+    }
   };
 
   const handleReject = (messageId: string) => {
     console.log("Reject message:", messageId);
-    // TODO: Implement reject logic
+    if (approvalDecision && message) {
+      approvalDecision(messageId, false, message.type || (isGroup ? "group" : "user"));
+    }
   };
 
   const handleSendForApproval = (messageId: string) => {
     console.log("Send for approval:", messageId);
-    // TODO: Implement send for approval logic
+    if (receiveApprovedRequest && message) {
+      if (message.type === "group") {
+        // Open specific approval modal for groups
+        handleSendForApprovalWithSpecific({ messageId, type: message.type });
+      } else {
+        // Direct approval for user messages
+        receiveApprovedRequest(messageId, message.type || (isGroup ? "group" : "user"), null);
+      }
+    }
   };
 
-  const handleEdit = (messageId: string) => {
+  const handleEdit = async (messageId: string) => {
     console.log("Edit message:", messageId);
-    // TODO: Implement edit logic
+    setIsEditOpen(true);
   };
 
   const handleDelete = (messageId: string) => {
     console.log("Delete message:", messageId);
-    // TODO: Implement delete logic
+    if (deleteMessage && message) {
+      deleteMessage(messageId, message.type || (isGroup ? "group" : "user"));
+    }
   };
 
   const handleDeleteRequest = (messageId: string) => {
     console.log("Delete request:", messageId);
-    // TODO: Implement delete request logic
+    if (deleteRequest && message) {
+      deleteRequest(messageId, message.type || (isGroup ? "group" : "user"));
+    }
   };
 
   const handleCancelDeleteRequest = (messageId: string) => {
     console.log("Cancel delete request:", messageId);
-    // TODO: Implement cancel delete request logic
+    if (cancelDeleteRequest && message) {
+      cancelDeleteRequest(messageId, message.type || (isGroup ? "group" : "user"));
+    }
   };
 
   const handleInfo = (messageId: string) => {
     console.log("Show message info:", messageId);
-    // TODO: Implement info logic
+    setSelectedMessage({ messageId, type: message?.type || (isGroup ? "group" : "user") });
+    setIsInfoOpen(true);
   };
 
   const handleCopy = (messageId: string) => {
     console.log("Copy message:", messageId);
-    // TODO: Implement copy logic
-    navigator.clipboard.writeText(text);
+    if (text) {
+      navigator.clipboard.writeText(text).then(() => {
+        console.log("Message copied to clipboard");
+        // TODO: Show toast notification
+      }).catch((error) => {
+        console.error("Failed to copy message:", error);
+      });
+    }
   };
 
   const messageAttachments =
@@ -178,11 +257,11 @@ const Message: React.FC<IMessageProps> = ({
 
             <div className="flex items-end gap-3">
               {text && (
-                <div className={`text-sm leading-5 break-words ${getMessageTextColor({ 
-                  isApprovalNeeded: false,
-                  isApproved: false,      
-                  isRejected: false,      
-                  isDeleteRequest: false  
+                <div className={`text-sm leading-5 break-words ${getMessageTextColor({
+                  isApprovalNeeded: message?.isApprovalNeeded || false,
+                  isApproved: message?.isApproved || false,
+                  isRejected: message?.isRejected || false,
+                  isDeleteRequest: message?.isDeleteRequest || false
                 })}`}>
                   {renderMessage({
                     text,
@@ -220,11 +299,11 @@ const Message: React.FC<IMessageProps> = ({
               onDropdownChange={setIsDropdownOpen}
               message={{
                 id: id,
-                isApprovalNeeded: false, // TODO: Add actual message approval status
-                isApproved: false,       // TODO: Add actual message approval status
-                isRejected: false,       // TODO: Add actual message rejection status
-                isDeleteRequest: false,  // TODO: Add actual delete request status
-                type: isGroup ? "group" : "user",
+                isApprovalNeeded: message?.isApprovalNeeded || false,
+                isApproved: message?.isApproved || false,
+                isRejected: message?.isRejected || false,
+                isDeleteRequest: message?.isDeleteRequest || false,
+                type: message?.type || (isGroup ? "group" : "user"),
                 timestamp: timestamp,
                 permissions: {
                   canApprove: !isOwn && isGroup, // TODO: Add actual permission check
@@ -272,6 +351,33 @@ const Message: React.FC<IMessageProps> = ({
           onClose={() => setIsMediaPreviewOpen(false)}
         />
       )}
+
+      {/* Message Permissions Modal */}
+      <MessagePermissions
+        isOpen={isPermissionsOpen}
+        onOpenChange={setIsPermissionsOpen}
+        data={admins}
+        selectedUserId={selectedUserId}
+        onPermissionChange={setSelectedUserId}
+        receiveApprovedRequest={receiveApprovedRequest || (() => {})}
+        selectedMessage={selectedMessage}
+      />
+
+      {/* Message Info Modal */}
+      <MessageInfo
+        isOpen={isInfoOpen}
+        onOpenChange={setIsInfoOpen}
+        selectedMessage={selectedMessage}
+      />
+
+      {/* Message Edit Modal */}
+      <MessageEdit
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        editMessage={message}
+        setModifyMessage={setModifyMessage || (async () => {})}
+        onTyping={(isTyping) => console.log("Typing:", isTyping)}
+      />
     </div>
   );
 };

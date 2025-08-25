@@ -1,5 +1,6 @@
-import { formatMessage } from "./format-message";
-import { hasFormatting } from "./has-formatting";
+import { formatMessage } from "../utils/format-message";
+import { hasFormatting } from "../utils/has-formatting";
+
 
 export const renderMessage = ({
   text,

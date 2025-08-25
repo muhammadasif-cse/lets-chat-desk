@@ -198,7 +198,6 @@ export const useSignalREvent = (
     [dispatch, selectedChatId, authUserId]
   );
 
-
   //* mark seen multiple message
   const markAsSeen = useCallback(
     (data: { messageId: string; isSeen: boolean }) => {
@@ -229,81 +228,46 @@ export const useSignalREvent = (
     [dispatch],
   );
 
-  //   //! approval decision handler with professional deduplication
-  //   const handleApprovalDecision = useCallback(
-  //     ({
-  //       messageId,
-  //       isApproved,
-  //       isRejected,
-  //       replyMessage,
-  //       isApprovalNeeded,
-  //       isDeleteRequest,
-  //     }: any) => {
-  //       console.log("📥 Approval Decision:", {
-  //         messageId,
-  //         isApproved,
-  //         isRejected,
-  //         isApprovalNeeded,
-  //         isDeleteRequest,
-  //       });
+    //* approval decision handler with professional deduplication
+    const approvalDecision = useCallback(
+      ({
+        messageId,
+        isApproved,
+        isRejected,
+        replyMessage,
+        isApprovalNeeded,
+        isDeleteRequest,
+      }: any) => {2
+        // dispatch(
+        //   updateMessageApproval({
+        //     messageId,
+        //     isApproved: Boolean(isApproved),
+        //     isRejected: Boolean(isRejected),
+        //     isApprovalNeeded:
+        //       isApprovalNeeded !== undefined
+        //         ? Boolean(isApprovalNeeded)
+        //         : undefined,
+        //     isDeleteRequest:
+        //       isDeleteRequest !== undefined
+        //         ? Boolean(isDeleteRequest)
+        //         : undefined,
+        //   })
+        // );
 
-  //       const approvalKey = `${messageId}_approval_${isApproved}_${isRejected}`;
-  //       if (processedApprovalIds.current.has(approvalKey)) {
-  //         console.log(
-  //           "Duplicate approval decision detected, skipping:",
-  //           approvalKey
-  //         );
-  //         return;
-  //       }
-  //       processedApprovalIds.current.add(approvalKey);
-
-  //       playSound(SOUND_FILES.MESSAGE);
-
-  //       dispatch(
-  //         updateMessageApproval({
-  //           messageId,
-  //           isApproved: Boolean(isApproved),
-  //           isRejected: Boolean(isRejected),
-  //           isApprovalNeeded:
-  //             isApprovalNeeded !== undefined
-  //               ? Boolean(isApprovalNeeded)
-  //               : undefined,
-  //           isDeleteRequest:
-  //             isDeleteRequest !== undefined
-  //               ? Boolean(isDeleteRequest)
-  //               : undefined,
-  //         })
-  //       );
-
-  //       if (replyMessage && (isApproved === true || isRejected === true)) {
-  //         const replyKey = `${messageId}_reply_${
-  //           isApproved ? "approved" : "rejected"
-  //         }`;
-  //         if (!processedReplyIds.current.has(replyKey)) {
-  //           processedReplyIds.current.add(replyKey);
-  //           console.log("📥 Adding reply message:", replyMessage);
-
-  //           dispatch(
-  //             addReplyMessage({
-  //               message: {
-  //                 ...replyMessage,
-  //                 messageId: replyMessage.messageId || `reply_${Date.now()}`,
-  //                 userId: replyMessage?.senderId,
-  //                 toUserId: replyMessage?.receiverId,
-  //                 date: new Date().toISOString(),
-  //                 status: "sent" as const,
-  //               },
-  //               parentMessageId: messageId,
-  //               parentMessageText: replyMessage?.parentMessageText || "",
-  //             })
-  //           );
-  //         } else {
-  //           console.log("Duplicate reply message detected, skipping:", replyKey);
-  //         }
-  //       }
-  //     },
-  //     [dispatch]
-  //   );
+        if (replyMessage && (isApproved === true || isRejected === true)) {
+          const replyKey = `${messageId}_reply_${
+            isApproved ? "approved" : "rejected"
+          }`;
+          if (!processedReplyIds.current.has(replyKey)) {
+            processedReplyIds.current.add(replyKey);
+            console.log("📥 Adding reply message:", replyMessage);
+          } else {
+            console.log("Duplicate reply message detected, skipping:", replyKey);
+          }
+        }
+      },
+      [dispatch]
+    );
 
   //   //! receive approved request handler with deduplication
   //   const handleReceiveApprovedRequest = useCallback(
@@ -758,7 +722,8 @@ export const useSignalREvent = (
       OnReceiveMessage: receiveMessage,
       OnReceiveTyping: typingStatus,
       OnSeenAllMessage: markAsSeenMultiple,
-      //   OnApprovalDecision: handleApprovalDecision,
+      OnMessageSeen: markAsSeen,
+      OnApprovalDecision: approvalDecision,
       //   OnReceiveApprovedRequest: handleReceiveApprovedRequest,
       //   OnReceiveDeleteRequest: handleReceiveDeleteRequest,
       //   OnDeleteMessage: handleDeleteMessage,
@@ -779,6 +744,7 @@ export const useSignalREvent = (
       typingStatus,
       selectedChatId,
       authUserId,
+      markAsSeen,
       markAsSeenMultiple
       //   handleSeenAllMessage,
       //   handleApprovalDecision,

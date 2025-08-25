@@ -189,8 +189,26 @@ export interface IMessageProps {
   senderName: string;
   senderPhoto?: string;
   status: "sent" | "delivered" | "seen" | "failed" | "sending" | "queued";
-  attachment?: IMessageAttachment; // First attachment for backward compatibility
-  attachments?: IMessageAttachment[]; // All attachments
+  attachment?: IMessageAttachment;
+  attachments?: IMessageAttachment[];
   replyTo?: IMessageReply;
   onReply?: () => void;
+  
+  // Message approval actions
+  approvalDecision?: (messageId: string, isApprove: boolean, type: string) => void;
+  receiveApprovedRequest?: (messageId: string, type: string, approverId?: number | null) => void;
+  
+  // Message delete actions
+  deleteRequest?: (messageId: string, type: string) => void;
+  deleteMessage?: (messageId: string, type: string) => void;
+  cancelDeleteRequest?: (messageId: string, type: string) => void;
+  
+  // Message edit action
+  setModifyMessage?: (messageId: string, newMessage: string, type: string) => Promise<void>;
+  
+  // Typing indicator
+  onTyping?: (isTyping: boolean) => void;
+  
+  // Message data for status checks
+  message?: IMessage;
 }

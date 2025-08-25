@@ -10,7 +10,7 @@ import {
   ISendMessageData,
 } from "../../../../interfaces/chat";
 import { setCurrentCallCount } from "../../../../redux/store/actions";
-import Loading from "../utils/loading";
+import Loading from "../helpers/loading";
 import { processAttachments } from "../utils/process-attachments";
 import Header from "./header";
 import Message from "./message";
@@ -220,6 +220,44 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
     });
   };
 
+  // Message action handlers
+  const handleApprovalDecision = (messageId: string, isApprove: boolean, type: string) => {
+    console.log("Approval decision:", { messageId, isApprove, type });
+    // TODO: Implement approval decision logic with SignalR
+    // Example: signalR.approvalDecision(messageId, isApprove, type);
+  };
+
+  const handleReceiveApprovedRequest = (messageId: string, type: string, approverId?: number | null) => {
+    console.log("Receive approved request:", { messageId, type, approverId });
+    // TODO: Implement receive approved request logic with SignalR
+    // Example: signalR.receiveApprovedRequest(messageId, type, approverId);
+  };
+
+  const handleDeleteRequest = (messageId: string, type: string) => {
+    console.log("Delete request:", { messageId, type });
+    // TODO: Implement delete request logic with SignalR
+    // Example: signalR.deleteRequest(messageId, type);
+  };
+
+  const handleDeleteMessage = (messageId: string, type: string) => {
+    console.log("Delete message:", { messageId, type });
+    // TODO: Implement delete message logic with SignalR
+    // Example: signalR.deleteMessage(messageId, type);
+  };
+
+  const handleCancelDeleteRequest = (messageId: string, type: string) => {
+    console.log("Cancel delete request:", { messageId, type });
+    // TODO: Implement cancel delete request logic with SignalR
+    // Example: signalR.cancelDeleteRequest(messageId, type);
+  };
+
+  const handleSetModifyMessage = async (messageId: string, newMessage: string, type: string): Promise<void> => {
+    console.log("Modify message:", { messageId, newMessage, type });
+    // TODO: Implement modify message logic with SignalR
+    // Example: await signalR.setModifyMessage(messageId, newMessage, type);
+    return Promise.resolve();
+  };
+
   const handleCancelReply = () => {
     setReplyTo(null);
   };
@@ -342,6 +380,14 @@ const ChatContainer: React.FC<IChatContainerProps> = ({
                         : undefined
                     }
                     onReply={() => handleReplyToMessage(message)}
+                    approvalDecision={handleApprovalDecision}
+                    receiveApprovedRequest={handleReceiveApprovedRequest}
+                    deleteRequest={handleDeleteRequest}
+                    deleteMessage={handleDeleteMessage}
+                    cancelDeleteRequest={handleCancelDeleteRequest}
+                    setModifyMessage={handleSetModifyMessage}
+                    message={message}
+                    onTyping={onTyping}
                     data-message-id={message.messageId}
                   />
                 );
