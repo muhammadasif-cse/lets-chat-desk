@@ -59,13 +59,12 @@ const MessageInfo: React.FC<IMessageInfoProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50">
-      <div className="h-full w-full min-w-[340px] max-w-[500px] bg-[#202d33] text-white animate-in slide-in-from-right">
-        <div className="flex items-center gap-3 p-4 border-b border-[#3c454c]">
+      <div className="h-full w-full min-w-[340px] max-w-[500px] bg-dark4 text-white animate-in slide-in-from-right">
+        <div className="flex items-center gap-3 p-4 border-b border-gray">
           <Button
-            variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
-            className="hover:bg-[#3c454c] text-white"
+            className="bg-gray text-dark size-6 hover:bg-gray/90"
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
