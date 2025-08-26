@@ -3,7 +3,10 @@ import { useAppSelector } from "@/redux/selector";
 import {
   addOptimisticMessage,
   addOrUpdateRecentUser,
+  removeMessage,
   setTypingStatus,
+  updateMessage,
+  updateMessageApproval,
   updateMessageStatus,
 } from "@/redux/store/actions";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -59,11 +62,14 @@ export const useSignalREvent = (
         console.warn("Invalid message received:", res);
         return;
       }
-      if (processedMessageIds.current.has(res.messageId)) {
+      
+      // Enhanced deduplication with message content check
+      const messageKey = `${res.messageId}_${res.message || ''}_${res.date || ''}`;
+      if (processedMessageIds.current.has(messageKey)) {
         console.log("Duplicate message detected, skipping:", res.messageId);
         return;
       }
-      processedMessageIds.current.add(res.messageId);
+      processedMessageIds.current.add(messageKey);
 
       const chatId = res.type === "group" 
         ? res.groupId 
@@ -156,7 +162,7 @@ export const useSignalREvent = (
         }
       }
     },
-    [authUserId, dispatch, selectedChatId, recentUsers]
+    [authUserId, dispatch, selectedChatId, recentUsers, signalRFunctions]
   );
 
   //* typing status handler
@@ -230,108 +236,159 @@ export const useSignalREvent = (
 
   //* approval decision handler with professional deduplication
   const approvalDecision = useCallback(
-      ({
+    ({
+      messageId,
+      isApproved,
+      isRejected,
+      replyMessage,
+      isApprovalNeeded,
+      isDeleteRequest,
+    }: any) => {
+      console.log("📥 Approval decision received:", {
         messageId,
         isApproved,
         isRejected,
         replyMessage,
         isApprovalNeeded,
         isDeleteRequest,
-      }: any) => {2
-        // dispatch(
-        //   updateMessageApproval({
-        //     messageId,
-        //     isApproved: Boolean(isApproved),
-        //     isRejected: Boolean(isRejected),
-        //     isApprovalNeeded:
-        //       isApprovalNeeded !== undefined
-        //         ? Boolean(isApprovalNeeded)
-        //         : undefined,
-        //     isDeleteRequest:
-        //       isDeleteRequest !== undefined
-        //         ? Boolean(isDeleteRequest)
-        //         : undefined,
-        //   })
-        // );
+      });
 
-        if (replyMessage && (isApproved === true || isRejected === true)) {
-          const replyKey = `${messageId}_reply_${
-            isApproved ? "approved" : "rejected"
-          }`;
-          if (!processedReplyIds.current.has(replyKey)) {
-            processedReplyIds.current.add(replyKey);
-            console.log("📥 Adding reply message:", replyMessage);
-          } else {
-            console.log("Duplicate reply message detected, skipping:", replyKey);
-          }
+      // Update the original message approval status
+      dispatch(
+        updateMessageApproval({
+          messageId,
+          isApproved: Boolean(isApproved),
+          isRejected: Boolean(isRejected),
+          isApprovalNeeded:
+            isApprovalNeeded !== undefined
+              ? Boolean(isApprovalNeeded)
+              : false, // Set to false when decision is made
+          isDeleteRequest:
+            isDeleteRequest !== undefined
+              ? Boolean(isDeleteRequest)
+              : undefined,
+        })
+      );
+
+      // Add reply message if approval/rejection happened
+      if (replyMessage && (isApproved === true || isRejected === true)) {
+        const replyKey = `${messageId}_reply_${
+          isApproved ? "approved" : "rejected"
+        }`;
+        if (!processedReplyIds.current.has(replyKey)) {
+          processedReplyIds.current.add(replyKey);
+          console.log("📥 Adding reply message:", replyMessage);
+
+          // Create a proper reply message from the response
+          const replyMessageForChat: IMessage = {
+            messageId: replyMessage.id,
+            parentMessageId: replyMessage.parentMessageId || messageId,
+            parentMessageText: replyMessage.parentMessageText || null,
+            date: replyMessage.createdAt || new Date().toISOString(),
+            message: replyMessage.message || "",
+            senderName: replyMessage.senderName || "",
+            toUserId: 0,
+            userId: replyMessage.senderId || authUserId,
+            status: "sent",
+            type: replyMessage.type || "group",
+            isApprovalNeeded: false,
+            isApproved: false,
+            isDeleteRequest: false,
+            deleteRequestedAt: null,
+            isRejected: false,
+            isNotification: true,
+            eligibleUsers: null,
+            attachments: [],
+          };
+
+          dispatch(addOptimisticMessage(replyMessageForChat));
+        } else {
+          console.log("Duplicate reply message detected, skipping:", replyKey);
         }
-      },
-      [dispatch]
+      }
+    },
+    [dispatch, authUserId]
   );
 
-  //   //! receive approved request handler with deduplication
-  //   const handleReceiveApprovedRequest = useCallback(
-  //     (data: any) => {
-  //       console.log("📥 Received approved request:", data);
+  //* receive approved request handler with deduplication
+  const handleReceiveApprovedRequest = useCallback(
+    (data: any) => {
+      console.log("📥 SERVER CONFIRMED: Received approved request from server:", data);
+      console.log("📥 This means the backend has processed our approval request");
 
-  //       const requestKey = `${data?.messageId}_approve_request`;
-  //       if (processedApprovalIds.current.has(requestKey)) {
-  //         console.log(
-  //           "Duplicate approval request detected, skipping:",
-  //           requestKey
-  //         );
-  //         return;
-  //       }
-  //       processedApprovalIds.current.add(requestKey);
+      const requestKey = `${data?.messageId}_approve_request`;
+      if (processedApprovalIds.current.has(requestKey)) {
+        console.log(
+          "Duplicate approval request detected, skipping:",
+          requestKey
+        );
+        return;
+      }
+      processedApprovalIds.current.add(requestKey);
 
-  //       playSound(SOUND_FILES.MESSAGE);
+      console.log("📥 Updating message approval state for:", data?.messageId);
+      
+      // This confirms the server has received our request
+      dispatch(
+        updateMessageApproval({
+          messageId: data?.messageId,
+          isApprovalNeeded: true,
+        })
+      );
+    },
+    [dispatch]
+  );
 
-  //       dispatch(
-  //         updateMessageApproval({
-  //           messageId: data?.messageId,
-  //           isApprovalNeeded: true,
-  //         })
-  //       );
-  //     },
-  //     [dispatch]
-  //   );
+  //* delete request handler
+  const handleReceiveDeleteRequest = useCallback(
+    (data: any) => {
+      console.log("📥 Received delete request:", data);
+      dispatch(
+        updateMessageApproval({
+          messageId: data.messageId,
+          isDeleteRequest: true,
+        })
+      );
+    },
+    [dispatch]
+  );
 
-  //   //! delete request handler
-  //   const handleReceiveDeleteRequest = useCallback(
-  //     (data: any) => {
-  //       playSound(SOUND_FILES.MESSAGE);
-  //       dispatch(
-  //         updateMessageApproval({
-  //           messageId: data.messageId,
-  //           isDeleteRequest: true,
-  //         })
-  //       );
-  //     },
-  //     [dispatch]
-  //   );
+  //* delete message handler
+  const handleDeleteMessage = useCallback(
+    (data: any) => {
+      console.log("📥 Delete message:", data);
+      dispatch(removeMessage(data.messageId));
+    },
+    [dispatch]
+  );
 
-  //   //! delete message handler
-  //   const handleDeleteMessage = useCallback(
-  //     (data: any) => {
-  //       playSound(SOUND_FILES.MESSAGE);
-  //       dispatch(removeMessage(data.messageId));
-  //     },
-  //     [dispatch]
-  //   );
+  //* cancel delete request handler
+  const handleCancelDeleteRequest = useCallback(
+    (data: any) => {
+      console.log("📥 Cancel delete request:", data);
+      dispatch(
+        updateMessageApproval({
+          messageId: data.messageId,
+          isDeleteRequest: false,
+        })
+      );
+    },
+    [dispatch]
+  );
 
-  //   //! cancel delete request handler
-  //   const handleCancelDeleteRequest = useCallback(
-  //     (data: any) => {
-  //       playSound(SOUND_FILES.MESSAGE);
-  //       dispatch(
-  //         updateMessageApproval({
-  //           messageId: data.messageId,
-  //           isDeleteRequest: false,
-  //         })
-  //       );
-  //     },
-  //     [dispatch]
-  //   );
+  //* message modification handler
+  const handleModifyMessage = useCallback(
+    (data: { messageId: string; newMessage: string }) => {
+      console.log("📥 Modify message:", data);
+      dispatch(
+        updateMessage({
+          messageId: data.messageId,
+          newMessage: data.newMessage,
+        })
+      );
+    },
+    [dispatch]
+  );
 
   //   //! seen all messages handler
   //   const handleSeenAllMessage = useCallback(
@@ -724,20 +781,11 @@ export const useSignalREvent = (
       OnSeenAllMessage: markAsSeenMultiple,
       OnMessageSeen: markAsSeen,
       OnApprovalDecision: approvalDecision,
-      //   OnReceiveApprovedRequest: handleReceiveApprovedRequest,
-      //   OnReceiveDeleteRequest: handleReceiveDeleteRequest,
-      //   OnDeleteMessage: handleDeleteMessage,
-      //   OnCancelDeleteRequest: handleCancelDeleteRequest,
-      //   UserOnlineStatus: handleOnlineStatus,
-      //   OnModifyMessage: handleModifyMessage,
-      //   OnGroupCreated: handleGroupCreated,
-      //   OnRemoveFromGroup: handleRemoveFromGroup,
-      //   OnAddedUserIntoGroup: handleAddedUserIntoGroup,
-      //   OnChangePermission: handleChangePermission,
-      //   OnGroupUpdated: handleGroupUpdated,
-      //   OnMessageReaction: handleMessageReaction,
-      //   OnGroupDeleteRequested: handleGroupDeleteRequest,
-      //   OnDeleteGroup: handleDeleteGroupConfirm,
+      OnReceiveApprovedRequest: handleReceiveApprovedRequest,
+      OnReceiveDeleteRequest: handleReceiveDeleteRequest,
+      OnDeleteMessage: handleDeleteMessage,
+      OnCancelDeleteRequest: handleCancelDeleteRequest,
+      OnModifyMessage: handleModifyMessage,
     }),
     [
       receiveMessage,
@@ -745,23 +793,13 @@ export const useSignalREvent = (
       selectedChatId,
       authUserId,
       markAsSeen,
-      markAsSeenMultiple
-      //   handleSeenAllMessage,
-      //   handleApprovalDecision,
-      //   handleReceiveApprovedRequest,
-      //   handleReceiveDeleteRequest,
-      //   handleDeleteMessage,
-      //   handleCancelDeleteRequest,
-      //   handleOnlineStatus,
-      //   handleModifyMessage,
-      //   handleGroupCreated,
-      //   handleRemoveFromGroup,
-      //   handleAddedUserIntoGroup,
-      //   handleChangePermission,
-      //   handleGroupUpdated,
-      //   handleMessageReaction,
-      //   handleGroupDeleteRequest,
-      //   handleDeleteGroupConfirm,
+      markAsSeenMultiple,
+      approvalDecision,
+      handleReceiveApprovedRequest,
+      handleReceiveDeleteRequest,
+      handleDeleteMessage,
+      handleCancelDeleteRequest,
+      handleModifyMessage,
     ]
   );
 

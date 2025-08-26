@@ -43,6 +43,7 @@ interface MessageOptionProps {
   onApprove?: (messageId: string) => void;
   onReject?: (messageId: string) => void;
   onSendForApproval?: (messageId: string) => void;
+  onSendForApprovalSpecific?: (messageId: string) => void;
   onEdit?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
   onDeleteRequest?: (messageId: string) => void;
@@ -59,6 +60,7 @@ export default function MessageOption({
   onApprove,
   onReject,
   onSendForApproval,
+  onSendForApprovalSpecific,
   onEdit,
   onDelete,
   onDeleteRequest,
@@ -159,6 +161,16 @@ export default function MessageOption({
               <SendIcon className="size-4 mr-2 text-warning" />
               <span className="font-medium text-warning">Send for Approval</span>
             </DropdownMenuItem>
+            
+            {message?.type === "group" && onSendForApprovalSpecific && (
+              <DropdownMenuItem
+                onClick={() => onSendForApprovalSpecific?.(message?.id || "")}
+                className="cursor-pointer hover:bg-dark/30 focus:bg-dark/30"
+              >
+                <SendIcon className="size-4 mr-2 text-blue" />
+                <span className="font-medium text-blue">Send for Approval (Specific)</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator className="bg-green h-[1.5px]" />
           </>
         )}

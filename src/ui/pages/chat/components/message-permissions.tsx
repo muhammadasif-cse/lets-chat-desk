@@ -85,9 +85,9 @@ const MessagePermissions: React.FC<MessagePermissionsProps> = ({
           </div>
 
           <Button
+            size={'sm'}
             onClick={handleSend}
             disabled={selectedUserId === null}
-            className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Send
           </Button>

@@ -109,6 +109,12 @@ const Message: React.FC<IMessageProps> = ({
 
   const handleSendForApproval = (messageId: string) => {
     if (receiveApprovedRequest && message) {
+      receiveApprovedRequest(messageId, message.type || (isGroup ? "group" : "user"), null);
+    }
+  };
+
+  const handleSendForApprovalSpecific = (messageId: string) => {
+    if (receiveApprovedRequest && message) {
       if (message.type === "group") {
         handleSendForApprovalWithSpecific({ messageId, type: message.type });
       } else {
@@ -311,6 +317,7 @@ const Message: React.FC<IMessageProps> = ({
               onApprove={handleApprove}
               onReject={handleReject}
               onSendForApproval={handleSendForApproval}
+              onSendForApprovalSpecific={handleSendForApprovalSpecific}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onDeleteRequest={handleDeleteRequest}

@@ -159,6 +159,50 @@ export const chatSlice = createSlice({
         state.typingStatus = action.payload;
       }
     },
+    updateMessageApproval: (
+      state,
+      action: PayloadAction<{
+        messageId: string;
+        isApprovalNeeded?: boolean;
+        isApproved?: boolean;
+        isRejected?: boolean;
+        isDeleteRequest?: boolean;
+      }>
+    ) => {
+      const message = state.chats.find(
+        (msg) => msg.messageId === action.payload.messageId
+      );
+      if (message) {
+        if (action.payload.isApprovalNeeded !== undefined) {
+          message.isApprovalNeeded = action.payload.isApprovalNeeded;
+        }
+        if (action.payload.isApproved !== undefined) {
+          message.isApproved = action.payload.isApproved;
+        }
+        if (action.payload.isRejected !== undefined) {
+          message.isRejected = action.payload.isRejected;
+        }
+        if (action.payload.isDeleteRequest !== undefined) {
+          message.isDeleteRequest = action.payload.isDeleteRequest;
+        }
+      }
+    },
+    removeMessage: (state, action: PayloadAction<string>) => {
+      state.chats = state.chats.filter(
+        (msg) => msg.messageId !== action.payload
+      );
+    },
+    updateMessage: (
+      state,
+      action: PayloadAction<{ messageId: string; newMessage: string }>
+    ) => {
+      const message = state.chats.find(
+        (msg) => msg.messageId === action.payload.messageId
+      );
+      if (message) {
+        message.message = action.payload.newMessage;
+      }
+    },
   },
 });
 
@@ -184,6 +228,9 @@ export const {
   updateMessageStatus,
   updateMessageAttachments,
   setTypingStatus,
+  updateMessageApproval,
+  removeMessage,
+  updateMessage,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;
